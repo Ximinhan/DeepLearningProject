@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>简介 &mdash; DeepLearning 1.0 文档</title>
+  <title>多模态电影类型分类 &mdash; DeepLearning 1.0 文档</title>
   
 
   
@@ -36,8 +36,8 @@
               href="../genindex.html"/>
         <link rel="search" title="搜索" href="../search.html"/>
     <link rel="top" title="DeepLearning 1.0 文档" href="../index.html"/>
-        <link rel="next" title="背景介绍" href="introduction.html"/>
-        <link rel="prev" title="机器学习案例" href="../index.html"/> 
+        <link rel="up" title="第二章 多模态电影类型分类" href="index.html"/>
+        <link rel="prev" title="第二章 多模态电影类型分类" href="index.html"/> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -92,11 +92,17 @@
             
               <p class="caption"><span class="caption-text">目录:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">简介</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="introduction.html">背景介绍</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../section_1/index.html">简介</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">第二章 多模态电影类型分类</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">多模态电影类型分类</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">哇！听起来是不是非常复杂？让我们一步一步分析。</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id3">问题1： 什么叫分类？</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../section_2/index.html">第二章 多模态电影类型分类</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 
             
@@ -141,13 +147,15 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-      <li>简介</li>
+          <li><a href="index.html">第二章 多模态电影类型分类</a> &raquo;</li>
+        
+      <li>多模态电影类型分类</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="../_sources/section_1/index.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/section_2/movie_classification.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -161,11 +169,32 @@
            <div itemprop="articleBody">
             
   <div class="section" id="id1">
-<h1>简介<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h1>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="introduction.html">背景介绍</a></li>
+<h1>多模态电影类型分类<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h1>
+<div class="section" id="id2">
+<h2>哇！听起来是不是非常复杂？让我们一步一步分析。<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
+<div class="section" id="id3">
+<h3>问题1： 什么叫分类？<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h3>
+<p>在机器学习中，分类的过程表示用已有的数据总结出一个方法可以将一个数据值标识为某个类别。比方说，给一部电影划分类别，像“爱情喜剧”，“动作”，“惊悚”。再比方说自动给新闻划分题材，像“体育”和“政治”。</p>
+<p>学术一点的说法是</p>
+<ul class="simple">
+<li>已知：
++ 一个数据值 Xi
++ 一系列 Xi 可以划分的类别 Y1,Y2…Yn</li>
+<li>目标：
+对于一个未知的数据值 Xk 预测其所属的类别 Yk</li>
+<li>难点：
+我们不知道 X 和 Y 是如何函数相关的</li>
+<li>假设：
+假设存在关联函数 F 使得 F(Xi)=Yi</li>
+<li>解决过程：
+既然函数 F 不知道，那就通过学习得到一个近似于 F 的函数 G 函数。</li>
+<li>重要思路：
++ 如果 F(Xi)=G(Xi)=Yi 对所有 Xi 都成立，那么函数 F 和函数 G 肯定是一样的。不用说，这不太可能，我们只能近似地认为真正的函数 F 覆盖了函数 G 。这意味着有时候使用 G 函数得出的结果是错误的。本质上说，我们就是要找到 G 函数使得错误的概率尽可能小。这就是我们所要做的也是所能做的一切。
++ 从整体上说，这属于机器学习中的一类，我们称之为“有监督学习”。另外，对于未知的数据值近似认为 G 等同于 F 的方法叫做“泛化能力”。显然最重要的是我们的模型是可泛化的，否则我们所有的声明都只对已知数据有效对预测都是错误的。
++ 我们需要了解泛化能力，这对本章来说有点超前。
++ 当然，还有许多其他机器学习的方式，但是“有监督学习”是最流行也是最广泛被学习的种类。</li>
 </ul>
+</div>
 </div>
 </div>
 
@@ -179,10 +208,8 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="introduction.html" class="btn btn-neutral float-right" title="背景介绍" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
-      
-        <a href="../index.html" class="btn btn-neutral" title="机器学习案例" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral" title="第二章 多模态电影类型分类" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
