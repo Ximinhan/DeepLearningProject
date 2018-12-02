@@ -1,6 +1,6 @@
-第二章 多模态电影类型分类
+第二章
 ========
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 1
     
     movie_classification
