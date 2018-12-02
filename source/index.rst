@@ -10,12 +10,12 @@ Welcome to DeepLearning's documentation!
    :maxdepth: 1
    :caption: Contents:
 
-   helloworld
+   section_1/index
 
 
-Indices and tables
-==================
+.. Indices and tables
+   ==================
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   * :ref:`genindex`
+   * :ref:`modindex`
+   * :ref:`search`
