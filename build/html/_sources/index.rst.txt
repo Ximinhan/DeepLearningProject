@@ -18,6 +18,7 @@
    section_6/index
    section_7/index
    section_8/index
+   section_9/index
 
 
 .. Indices and tables
