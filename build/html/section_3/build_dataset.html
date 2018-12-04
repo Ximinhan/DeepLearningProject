@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>第三章 &mdash; DeepLearning 1.0 文档</title>
+  <title>建立自己的数据集 &mdash; DeepLearning 1.0 文档</title>
   
 
   
@@ -36,8 +36,9 @@
               href="../genindex.html"/>
         <link rel="search" title="搜索" href="../search.html"/>
     <link rel="top" title="DeepLearning 1.0 文档" href="../index.html"/>
-        <link rel="next" title="建立自己的数据集" href="build_dataset.html"/>
-        <link rel="prev" title="多模态电影类型分类" href="../section_2/movie_classification.html"/> 
+        <link rel="up" title="第三章" href="index.html"/>
+        <link rel="next" title="第四章" href="../section_4/index.html"/>
+        <link rel="prev" title="第三章" href="index.html"/> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -94,8 +95,11 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../section_1/index.html">第一章</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../section_2/index.html">第二章</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">第三章</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="build_dataset.html">建立自己的数据集</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">第三章</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">建立自己的数据集</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">什么是好的数据？或者说对于什么样的数据是“有代表性”的？</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../section_4/index.html">第四章</a></li>
@@ -148,13 +152,15 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-      <li>第三章</li>
+          <li><a href="index.html">第三章</a> &raquo;</li>
+        
+      <li>建立自己的数据集</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="../_sources/section_3/index.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/section_3/build_dataset.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -168,11 +174,11 @@
            <div itemprop="articleBody">
             
   <div class="section" id="id1">
-<h1>第三章<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h1>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="build_dataset.html">建立自己的数据集</a></li>
-</ul>
+<h1>建立自己的数据集<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h1>
+<p>对于任何机器学习算法来说，收集具有“代表性”的数据是很有必要的工作。现在我们就来探讨一下什么叫“有代表性”。</p>
+<div class="section" id="id2">
+<h2>什么是好的数据？或者说对于什么样的数据是“有代表性”的？<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
+<p>让我们从基本原理上来看这个问题。理论上说，机器学习的前提(准确的说，我们将从这里开始真正的机器学习)是有一个输入变量 X 和一个输出变量 Y ，如果存在一个方法比如 g(X)=Y ,如果 g 也是未知的，我们可以“学习”一个与 g 相似的方法 f 。从本质上说，这与您之前学过的“曲线拟合”没有什么区别。例如，如果你试图预测某人的电影喜好，那么 X 可以是这个人的性别、年龄、国籍等信息，而 Y 可以是他们最喜欢的类型!</p>
 </div>
 </div>
 
@@ -186,10 +192,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="build_dataset.html" class="btn btn-neutral float-right" title="建立自己的数据集" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="../section_4/index.html" class="btn btn-neutral float-right" title="第四章" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../section_2/movie_classification.html" class="btn btn-neutral" title="多模态电影类型分类" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral" title="第三章" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
