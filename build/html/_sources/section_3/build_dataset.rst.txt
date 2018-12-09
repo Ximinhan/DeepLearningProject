@@ -23,4 +23,40 @@
 我们将从两个电影资源中爬取数据-IMDB和TMDB
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-IMDB
+IMDB：http://www.imdb.com/
+
+有些人可能不知道，IMDB是互联网上电影信息的主要数据源。该网站上针对每一部电影有丰富的海报，评论，梗概，评分和许多其他信息。我们将它作为我们主要的数据源。
+
+TMDB：http://themoviedb.org/
+
+TMDB，又称为电影数据库，是一个开源版本的IMDB有很多开源的API接口可以被用来收集数据。调用API需要用到密钥，你可以通过免费注册一个账户获得。
+
+
+警告 -
+
+我们通过免费的API从IMDB获取了一些信息，但还缺失一些关于电影的其他信息。现在我们会通过合法的方式获取免费且合法的信息。但无论怎么说，爬取信息确实处在道德边缘。人们经常从网站上爬取一些并不公开的数据。
+
+::
+
+  import urllib2
+  import requests
+  import json
+  import imdb
+  import time
+  import itertools
+  import wget
+  import os
+  import tmdbsimple as tmdb
+  import numpy as np
+  import random
+  import matplotlib
+  import matplotlib.pyplot as plt
+  %matplotlib inline
+  import seaborn as sns
+  import pickle
+
+以下是为收集数据而要采取的技术步骤的概要
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ - 登录TMDB，然后设置API用来爬取以上电影的海报。
+ - 设置好并通过TMDB的数据库获取到电影的信息

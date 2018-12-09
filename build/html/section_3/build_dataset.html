@@ -99,6 +99,7 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">建立自己的数据集</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id2">什么是好的数据？或者说对于什么样的数据是“有代表性”的？</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#imdbtmdb">我们将从两个电影资源中爬取数据-IMDB和TMDB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">以下是为收集数据而要采取的技术步骤的概要</a></li>
 </ul>
 </li>
 </ul>
@@ -189,7 +190,39 @@
 </div>
 <div class="section" id="imdbtmdb">
 <h2>我们将从两个电影资源中爬取数据-IMDB和TMDB<a class="headerlink" href="#imdbtmdb" title="永久链接至标题">¶</a></h2>
-<p>IMDB</p>
+<p>IMDB：<a class="reference external" href="http://www.imdb.com/">http://www.imdb.com/</a></p>
+<p>有些人可能不知道，IMDB是互联网上电影信息的主要数据源。该网站上针对每一部电影有丰富的海报，评论，梗概，评分和许多其他信息。我们将它作为我们主要的数据源。</p>
+<p>TMDB：<a class="reference external" href="http://themoviedb.org/">http://themoviedb.org/</a></p>
+<p>TMDB，又称为电影数据库，是一个开源版本的IMDB有很多开源的API接口可以被用来收集数据。调用API需要用到密钥，你可以通过免费注册一个账户获得。</p>
+<p>警告 -</p>
+<p>我们通过免费的API从IMDB获取了一些信息，但还缺失一些关于电影的其他信息。现在我们会通过合法的方式获取免费且合法的信息。但无论怎么说，爬取信息确实处在道德边缘。人们经常从网站上爬取一些并不公开的数据。</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">urllib2</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">imdb</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">wget</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">tmdbsimple</span> <span class="k">as</span> <span class="nn">tmdb</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id3">
+<h2>以下是为收集数据而要采取的技术步骤的概要<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li>登录TMDB，然后设置API用来爬取以上电影的海报。</li>
+<li>设置好并通过TMDB的数据库获取到电影的信息</li>
+</ul>
+</div></blockquote>
 </div>
 </div>
 
