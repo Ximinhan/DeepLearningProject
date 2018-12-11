@@ -100,6 +100,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#id2">什么是好的数据？或者说对于什么样的数据是“有代表性”的？</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#imdbtmdb">我们将从两个电影资源中爬取数据-IMDB和TMDB</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#id3">以下是为收集数据而要采取的技术步骤的概要</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tmdb">登录TMDB并设置好准备获取电影原始数据</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tmdbapi">使用从TMDB申请到的API密钥获取电影信息</a></li>
 </ul>
 </li>
 </ul>
@@ -220,9 +222,100 @@
 <blockquote>
 <div><ul class="simple">
 <li>登录TMDB，然后设置API用来爬取以上电影的海报。</li>
-<li>设置好并通过TMDB的数据库获取到电影的信息</li>
+<li>设置好并通过TMDB的数据库获取到电影的信息。</li>
+<li>同理从IMDB获取信息。</li>
+<li>对比一部电影在IMDB和TMDB上条目的数量。</li>
+<li>列举一部分电影的信息。</li>
+<li>思考和衡量可能遇到的挑战，思考我们可以通过手中的API回答哪些有趣的问题。</li>
+<li>从TMDB收集数据。</li>
 </ul>
 </div></blockquote>
+<p>让我们一步一步实现。</p>
+</div>
+<div class="section" id="tmdb">
+<h2>登录TMDB并设置好准备获取电影原始数据<a class="headerlink" href="#tmdb" title="永久链接至标题">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li>第一步 打开[tmdb.org](<a class="reference external" href="https://www.themoviedb.org/?language=en">https://www.themoviedb.org/?language=en</a>)注册一个帐号并登录</li>
+<li>第二步 点击你个人信息的右上角，在下拉列表中选择“设置”</li>
+<li>第三步 在设置页面中点击左侧面板中的“API”选项</li>
+<li>第四步 申请一个开发者密钥。填写相关表单，其中“应用程序名称”和“应用程序链接”不是很重要可以任意填写。</li>
+<li>第五步 页面会生成一个新的API密钥同时你也会收到相关邮件</li>
+</ul>
+</div></blockquote>
+<p>现在你已经有个TMDB的API接口的密钥了，你可以通过TMDB进行查询。记住，你只允许每10秒钟请求不超过40次。</p>
+<p>一个简单方法应对这个限制只需要每次迭代时调用 time.sleep(1) 即可。同时这对服务器也很友好。</p>
+<p>如果你想尝试并最大化吞吐量，可以将每一个TMDB请求包装在嵌入的 try/except 模块中。当首次遇到失败时，第二次请求时调用python的sleep函数延迟一段时间，然后再次请求。像下面这样</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="k">try</span><span class="p">:</span>
+  <span class="n">search</span><span class="o">.</span><span class="n">movie</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="n">movie</span><span class="p">)</span> <span class="c1">#An API request</span>
+<span class="k">except</span><span class="p">:</span>
+  <span class="k">try</span><span class="p">:</span>
+      <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> <span class="c1">#sleep for a bit, to give API requests a rest.</span>
+      <span class="n">search</span><span class="o">.</span><span class="n">movie</span><span class="p">(</span><span class="n">query</span><span class="o">=&lt;</span><span class="n">i</span><span class="o">&gt;</span><span class="n">movie_name</span><span class="o">&lt;/</span><span class="n">i</span><span class="o">&gt;</span><span class="p">)</span> <span class="c1">#Make second API request</span>
+  <span class="k">except</span><span class="p">:</span>
+      <span class="nb">print</span> <span class="s2">&quot;Failed second attempt too, check if there&#39;s any error in request&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="tmdbapi">
+<h2>使用从TMDB申请到的API密钥获取电影信息<a class="headerlink" href="#tmdbapi" title="永久链接至标题">¶</a></h2>
+<p>为了简单起见，我已经写好了这些方法。基本上来说，我会使用一个名叫 tmdbsimple 的库来使得使用TMDB更加简单。这个库在一开始就安装了。</p>
+<p>当然，如果你不想使用库，不使用 tmdbsimple 也可以很容易地将API输出直接加载到这样的字典中</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">url</span> <span class="o">=</span> <span class="s1">&#39;https://api.themoviedb.org/3/movie/1581?api_key=&#39;</span> <span class="o">+</span> <span class="n">api_key</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">url</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="c1">#加载json数据到字典中</span>
+<span class="n">dataDict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="c1"># 在此设置你想要保存爬取数据的目录!</span>
+<span class="n">poster_folder</span><span class="o">=</span><span class="s1">&#39;posters_final/&#39;</span>
+<span class="k">if</span> <span class="n">poster_folder</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="s1">&#39;./&#39;</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Folder already exists&#39;</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="s1">&#39;./&#39;</span><span class="o">+</span><span class="n">poster_folder</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="c1"># 在本例中我将使用1999年的科幻电影《黑客帝国》!</span>
+
+<span class="n">api_key</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span> <span class="c1">#在此填入你的API密钥</span>
+<span class="c1"># 如何获取API密钥在上文已经说了</span>
+
+<span class="n">tmdb</span><span class="o">.</span><span class="n">API_KEY</span> <span class="o">=</span> <span class="n">api_key</span> <span class="c1">#将API密钥设置到 tmdb 对象的属性中</span>
+<span class="n">search</span> <span class="o">=</span> <span class="n">tmdb</span><span class="o">.</span><span class="n">Search</span><span class="p">()</span> <span class="c1">#这个实例是一个 tmdb “查询”对象，你可以用它来查找电影</span>
+
+<span class="c1"># 这个方法使用电影名称作为参数</span>
+<span class="c1"># 返回电影的一些属性信息</span>
+<span class="k">def</span> <span class="nf">grab_poster_tmdb</span><span class="p">(</span><span class="n">movie</span><span class="p">):</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">search</span><span class="o">.</span><span class="n">movie</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="n">movie</span><span class="p">)</span>
+    <span class="nb">id</span><span class="o">=</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;results&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
+    <span class="n">movie</span> <span class="o">=</span> <span class="n">tmdb</span><span class="o">.</span><span class="n">Movies</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
+    <span class="n">posterp</span><span class="o">=</span><span class="n">movie</span><span class="o">.</span><span class="n">info</span><span class="p">()[</span><span class="s1">&#39;poster_path&#39;</span><span class="p">]</span>
+    <span class="n">title</span><span class="o">=</span><span class="n">movie</span><span class="o">.</span><span class="n">info</span><span class="p">()[</span><span class="s1">&#39;original_title&#39;</span><span class="p">]</span>
+    <span class="n">url</span><span class="o">=</span><span class="s1">&#39;image.tmdb.org/t/p/original&#39;</span><span class="o">+</span><span class="n">posterp</span>
+    <span class="n">title</span><span class="o">=</span><span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">title</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">))</span>
+    <span class="n">strcmd</span><span class="o">=</span><span class="s1">&#39;wget -O &#39;</span><span class="o">+</span><span class="n">poster_folder</span><span class="o">+</span><span class="n">title</span><span class="o">+</span><span class="s1">&#39;.jpg &#39;</span><span class="o">+</span><span class="n">url</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">strcmd</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">get_movie_id_tmdb</span><span class="p">(</span><span class="n">movie</span><span class="p">):</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">search</span><span class="o">.</span><span class="n">movie</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="n">movie</span><span class="p">)</span>
+    <span class="n">movie_id</span><span class="o">=</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;results&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">movie_id</span>
+
+<span class="k">def</span> <span class="nf">get_movie_info_tmdb</span><span class="p">(</span><span class="n">movie</span><span class="p">):</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">search</span><span class="o">.</span><span class="n">movie</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="n">movie</span><span class="p">)</span>
+    <span class="nb">id</span><span class="o">=</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;results&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
+    <span class="n">movie</span> <span class="o">=</span> <span class="n">tmdb</span><span class="o">.</span><span class="n">Movies</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
+    <span class="n">info</span><span class="o">=</span><span class="n">movie</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">info</span>
+
+<span class="k">def</span> <span class="nf">get_movie_genres_tmdb</span><span class="p">(</span><span class="n">movie</span><span class="p">):</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">search</span><span class="o">.</span><span class="n">movie</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="n">movie</span><span class="p">)</span>
+    <span class="nb">id</span><span class="o">=</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;results&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
+    <span class="n">movie</span> <span class="o">=</span> <span class="n">tmdb</span><span class="o">.</span><span class="n">Movies</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
+    <span class="n">genres</span><span class="o">=</span><span class="n">movie</span><span class="o">.</span><span class="n">info</span><span class="p">()[</span><span class="s1">&#39;genres&#39;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">genres</span>
+</pre></div>
+</div>
 </div>
 </div>
 

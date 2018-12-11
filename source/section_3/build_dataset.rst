@@ -59,4 +59,111 @@ TMDB，又称为电影数据库，是一个开源版本的IMDB有很多开源的
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
  - 登录TMDB，然后设置API用来爬取以上电影的海报。
- - 设置好并通过TMDB的数据库获取到电影的信息
+ - 设置好并通过TMDB的数据库获取到电影的信息。
+ - 同理从IMDB获取信息。
+ - 对比一部电影在IMDB和TMDB上条目的数量。
+ - 列举一部分电影的信息。
+ - 思考和衡量可能遇到的挑战，思考我们可以通过手中的API回答哪些有趣的问题。
+ - 从TMDB收集数据。
+
+让我们一步一步实现。
+
+
+登录TMDB并设置好准备获取电影原始数据
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ - 第一步 打开[tmdb.org](https://www.themoviedb.org/?language=en)注册一个帐号并登录
+ - 第二步 点击你个人信息的右上角，在下拉列表中选择“设置”
+ - 第三步 在设置页面中点击左侧面板中的“API”选项
+ - 第四步 申请一个开发者密钥。填写相关表单，其中“应用程序名称”和“应用程序链接”不是很重要可以任意填写。
+ - 第五步 页面会生成一个新的API密钥同时你也会收到相关邮件
+
+现在你已经有个TMDB的API接口的密钥了，你可以通过TMDB进行查询。记住，你只允许每10秒钟请求不超过40次。
+
+一个简单方法应对这个限制只需要每次迭代时调用 time.sleep(1) 即可。同时这对服务器也很友好。
+
+如果你想尝试并最大化吞吐量，可以将每一个TMDB请求包装在嵌入的 try/except 模块中。当首次遇到失败时，第二次请求时调用python的sleep函数延迟一段时间，然后再次请求。像下面这样
+
+::
+  
+  try:
+    search.movie(query=movie) #An API request
+  except:
+    try:
+        time.sleep(10) #sleep for a bit, to give API requests a rest.
+        search.movie(query=<i>movie_name</i>) #Make second API request
+    except:
+        print "Failed second attempt too, check if there's any error in request"
+
+
+使用从TMDB申请到的API密钥获取电影信息
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+为了简单起见，我已经写好了这些方法。基本上来说，我会使用一个名叫 tmdbsimple 的库来使得使用TMDB更加简单。这个库在一开始就安装了。
+
+当然，如果你不想使用库，不使用 tmdbsimple 也可以很容易地将API输出直接加载到这样的字典中
+
+
+::
+
+  url = 'https://api.themoviedb.org/3/movie/1581?api_key=' + api_key
+  data = urllib2.urlopen(url).read()
+  #加载json数据到字典中
+  dataDict = json.loads(data)
+
+
+::
+
+  # 在此设置你想要保存爬取数据的目录!
+  poster_folder='posters_final/'
+  if poster_folder.split('/')[0] in os.listdir('./'):
+      print('Folder already exists')
+  else:
+      os.mkdir('./'+poster_folder)
+
+
+::
+
+  # 在本例中我将使用1999年的科幻电影《黑客帝国》!
+
+  api_key = '' #在此填入你的API密钥
+  # 如何获取API密钥在上文已经说了
+
+  tmdb.API_KEY = api_key #将API密钥设置到 tmdb 对象的属性中
+  search = tmdb.Search() #这个实例是一个 tmdb “查询”对象，你可以用它来查找电影
+
+  # 这个方法使用电影名称作为参数
+  # 返回电影的一些属性信息
+  def grab_poster_tmdb(movie):
+      response = search.movie(query=movie)
+      id=response['results'][0]['id']
+      movie = tmdb.Movies(id)
+      posterp=movie.info()['poster_path']
+      title=movie.info()['original_title']
+      url='image.tmdb.org/t/p/original'+posterp
+      title='_'.join(title.split(' '))
+      strcmd='wget -O '+poster_folder+title+'.jpg '+url
+      os.system(strcmd)
+
+  def get_movie_id_tmdb(movie):
+      response = search.movie(query=movie)
+      movie_id=response['results'][0]['id']
+      return movie_id
+
+  def get_movie_info_tmdb(movie):
+      response = search.movie(query=movie)
+      id=response['results'][0]['id']
+      movie = tmdb.Movies(id)
+      info=movie.info()
+      return info
+
+  def get_movie_genres_tmdb(movie):
+      response = search.movie(query=movie)
+      id=response['results'][0]['id']
+      movie = tmdb.Movies(id)
+      genres=movie.info()['genres']
+      return genres
+
+
+
+
