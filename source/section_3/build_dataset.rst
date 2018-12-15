@@ -165,5 +165,56 @@ TMDB，又称为电影数据库，是一个开源版本的IMDB有很多开源的
       return genres
 
 
+虽然上面的函数可以方便地获取类型、海报和ID，但是可以通过调用函数get_movie_info_tmdb()查看所有可以访问的信息，如下所示
+
+
+::
+
+  print get_movie_genres_tmdb("The Matrix")
+
+  [{u'id': 28, u'name': u'Action'}, {u'id': 878, u'name': u'Science Fiction'}]
+
+  info=get_movie_info_tmdb("The Matrix")
+  print "All the Movie information from TMDB gets stored in a dictionary with the following keys for easy access -"
+  info.keys()
+
+  #所有从TMDB获取的电影信息都存储在下面的字典中
+
+  [u'poster_path',
+   u'production_countries',
+   u'revenue',
+   u'overview',
+   u'video',
+   u'id',
+   u'genres',
+   u'title',
+   u'tagline',
+   u'vote_count',
+   u'homepage',
+   u'belongs_to_collection',
+   u'original_language',
+   u'status',
+   u'spoken_languages',
+   u'imdb_id',
+   u'adult',
+   u'backdrop_path',
+   u'production_companies',
+   u'release_date',
+   u'popularity',
+   u'original_title',
+   u'budget',
+   u'vote_average',
+   u'runtime']
+
+  #我们试着获取一下电影宣传语
+
+  info=get_movie_info_tmdb("The Matrix")
+  print info['tagline']
+
+  Welcome to the Real World.
+
+
+从IMDB获取信息
+~~~~~~~~~~~~~~~~~~~~~~~
 
 

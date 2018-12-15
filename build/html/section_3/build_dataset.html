@@ -102,6 +102,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#id3">以下是为收集数据而要采取的技术步骤的概要</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#tmdb">登录TMDB并设置好准备获取电影原始数据</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#tmdbapi">使用从TMDB申请到的API密钥获取电影信息</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#imdb">从IMDB获取信息</a></li>
 </ul>
 </li>
 </ul>
@@ -316,6 +317,54 @@
     <span class="k">return</span> <span class="n">genres</span>
 </pre></div>
 </div>
+<p>虽然上面的函数可以方便地获取类型、海报和ID，但是可以通过调用函数get_movie_info_tmdb()查看所有可以访问的信息，如下所示</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="nb">print</span> <span class="n">get_movie_genres_tmdb</span><span class="p">(</span><span class="s2">&quot;The Matrix&quot;</span><span class="p">)</span>
+
+<span class="p">[{</span><span class="s1">u&#39;id&#39;</span><span class="p">:</span> <span class="mi">28</span><span class="p">,</span> <span class="s1">u&#39;name&#39;</span><span class="p">:</span> <span class="s1">u&#39;Action&#39;</span><span class="p">},</span> <span class="p">{</span><span class="s1">u&#39;id&#39;</span><span class="p">:</span> <span class="mi">878</span><span class="p">,</span> <span class="s1">u&#39;name&#39;</span><span class="p">:</span> <span class="s1">u&#39;Science Fiction&#39;</span><span class="p">}]</span>
+
+<span class="n">info</span><span class="o">=</span><span class="n">get_movie_info_tmdb</span><span class="p">(</span><span class="s2">&quot;The Matrix&quot;</span><span class="p">)</span>
+<span class="nb">print</span> <span class="s2">&quot;All the Movie information from TMDB gets stored in a dictionary with the following keys for easy access -&quot;</span>
+<span class="n">info</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+
+<span class="c1">#所有从TMDB获取的电影信息都存储在下面的字典中</span>
+
+<span class="p">[</span><span class="s1">u&#39;poster_path&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;production_countries&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;revenue&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;overview&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;video&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;id&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;genres&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;title&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;tagline&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;vote_count&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;homepage&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;belongs_to_collection&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;original_language&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;status&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;spoken_languages&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;imdb_id&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;adult&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;backdrop_path&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;production_companies&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;release_date&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;popularity&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;original_title&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;budget&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;vote_average&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;runtime&#39;</span><span class="p">]</span>
+
+<span class="c1">#我们试着获取一下电影宣传语</span>
+
+<span class="n">info</span><span class="o">=</span><span class="n">get_movie_info_tmdb</span><span class="p">(</span><span class="s2">&quot;The Matrix&quot;</span><span class="p">)</span>
+<span class="nb">print</span> <span class="n">info</span><span class="p">[</span><span class="s1">&#39;tagline&#39;</span><span class="p">]</span>
+
+<span class="n">Welcome</span> <span class="n">to</span> <span class="n">the</span> <span class="n">Real</span> <span class="n">World</span><span class="o">.</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="imdb">
+<h2>从IMDB获取信息<a class="headerlink" href="#imdb" title="永久链接至标题">¶</a></h2>
 </div>
 </div>
 
