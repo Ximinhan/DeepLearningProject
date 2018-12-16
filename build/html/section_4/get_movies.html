@@ -97,7 +97,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../section_2/index.html">第二章</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../section_3/index.html">第三章</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">第四章</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">构建要使用的数据集:让我们看看数据库中的前1000部电影</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">构建要使用的数据集:让我们看看数据库中的前1000部电影</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">结对分析电影类型</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">深入探讨同时出现的类型</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../section_5/index.html">第五章</a></li>
@@ -172,7 +176,54 @@
             
   <div class="section" id="id1">
 <h1>构建要使用的数据集:让我们看看数据库中的前1000部电影<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h1>
-<p>使用前面的API我们只能获取前50个页面。如前文所说，</p>
+<p>使用前面的API我们只获取前50个页面。如前文所说，可以使用 top_movies=all_movies.popular() 的”page”参数实现。</p>
+<p>注意：下面的一些代码会在名为 “pickle” 的python文件中存储一些数据用来被内存访问，而不是每次都重新下载。一旦完成，你应该注释掉这些会产生新对象的代码并不再使用。</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">all_movies</span><span class="o">=</span><span class="n">tmdb</span><span class="o">.</span><span class="n">Movies</span><span class="p">()</span>
+<span class="n">top_movies</span><span class="o">=</span><span class="n">all_movies</span><span class="o">.</span><span class="n">popular</span><span class="p">()</span>
+
+<span class="nb">len</span><span class="p">(</span><span class="n">top_movies</span><span class="p">[</span><span class="s1">&#39;results&#39;</span><span class="p">])</span>
+<span class="n">top20_movs</span><span class="o">=</span><span class="n">top_movies</span><span class="p">[</span><span class="s1">&#39;results&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="c1"># 当数据保存到pickle文件后请注释掉这段代码</span>
+<span class="n">all_movies</span><span class="o">=</span><span class="n">tmdb</span><span class="o">.</span><span class="n">Movies</span><span class="p">()</span>
+<span class="n">top1000_movies</span><span class="o">=</span><span class="p">[]</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Pulling movie list, Please wait...&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">51</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">i</span><span class="o">%</span><span class="mi">15</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+    <span class="n">movies_on_this_page</span><span class="o">=</span><span class="n">all_movies</span><span class="o">.</span><span class="n">popular</span><span class="p">(</span><span class="n">page</span><span class="o">=</span><span class="n">i</span><span class="p">)[</span><span class="s1">&#39;results&#39;</span><span class="p">]</span>
+    <span class="n">top1000_movies</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">movies_on_this_page</span><span class="p">)</span>
+<span class="nb">len</span><span class="p">(</span><span class="n">top1000_movies</span><span class="p">)</span>
+<span class="n">f3</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;movie_list.pckl&#39;</span><span class="p">,</span><span class="s1">&#39;wb&#39;</span><span class="p">)</span>
+<span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">top1000_movies</span><span class="p">,</span><span class="n">f3</span><span class="p">)</span>
+<span class="n">f3</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Done!&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">f3</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;movie_list.pckl&#39;</span><span class="p">,</span><span class="s1">&#39;rb&#39;</span><span class="p">)</span>
+<span class="n">top1000_movies</span><span class="o">=</span><span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f3</span><span class="p">)</span>
+<span class="n">f3</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="section" id="id2">
+<h2>结对分析电影类型<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
+<p>由于我们的数据集是多标签的，仅仅只是关注类型分类是不充分的。观察哪些类型同时出现可能是有益的，因为它可能有助于揭示我们数据集中的固有偏见。例如，如果浪漫和喜剧比纪录片和喜剧更经常地出现在一起，那是有意义的。这种固有的偏见告诉我们，我们从自身抽样的潜在人群是不平衡的。然后我们可以采取步骤来考虑这些问题。即使我们不采取这些步骤，重要的是要意识到我们所做的假设是不平衡的数据集不会损害我们的性能，如果需要，我们可以回过头来修正这个假设。古老但有用的科学方法，不是吗?</p>
+<p>所以对于前1000部电影，我们来做一些类型分布的结对分析。我们的主要目的是看哪些类型的电影出现在同一部电影中。因此，我们首先定义一个函数，它取一个列表，并从中生成所有可能的对。然后，我们提取电影的类型列表，并在类型列表上运行这个函数，以获得所有同时出现的类型对。</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="c1"># This function just generates all possible pairs of movies</span>
+<span class="k">def</span> <span class="nf">list2pairs</span><span class="p">(</span><span class="n">l</span><span class="p">):</span>
+    <span class="c1"># itertools.combinations(l,2) makes all pairs of length 2 from list l.</span>
+    <span class="n">pairs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="c1"># then the one item pairs, as duplicate pairs aren&#39;t accounted for by itertools</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">l</span><span class="p">:</span>
+        <span class="n">pairs</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">pairs</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id3">
+<h2>深入探讨同时出现的类型<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
+</div>
 </div>
 
 
