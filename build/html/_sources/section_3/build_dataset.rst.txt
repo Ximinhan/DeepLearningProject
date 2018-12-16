@@ -214,7 +214,219 @@ TMDB，又称为电影数据库，是一个开源版本的IMDB有很多开源的
   Welcome to the Real World.
 
 
-从IMDB获取信息
+从IMDB获取电影信息
 ~~~~~~~~~~~~~~~~~~~~~~~
 
+现在我们已经知道如何从TMDB获取信息了，现在我们再看看如何从IMDB获取同样的电影信息。我们可以把信息结合起来获得一个更大的数据集。我也推荐你尝试本教程之外的更多的方式看看能获取出什么样的数据集。由于两个数据集存在差异，所以需要做一些数据清洗，尽管这两个数据集已经很精简了。
 
+::
+
+  # 创建一个IMDB对象用来访问IMDB数据库
+  imbd_object = imdb.IMDb() # 默认可以访问互联网
+
+  # 查找一部电影（返回电影对象列表）
+  results = imbd_object.search_movie('The Matrix')
+
+  # 在此我们只选用返回列表的第一个字段
+  movie = results[0]
+
+  imbd_object.update(movie)
+
+  print "All the information we can get about this movie from IMDB-"
+  movie.keys()
+
+  
+我们能从IMDB获取到这部电影的所有信息如下
+
+::
+
+  [u'music department',
+   'sound crew',
+   'camera and electrical department',
+   u'distributors',
+   'rating',
+   'runtimes',
+   'costume designer',
+   'make up',
+   'year',
+   'production design',
+   'miscellaneous crew',
+   'color info',
+   u'casting department',
+   'languages',
+   'votes',
+   'producer',
+   'title',
+   'mpaa',
+   'assistant director',
+   'writer',
+   'production manager',
+   'casting director',
+   'visual effects',
+   'top 250 rank',
+   'set decoration',
+   'editor',
+   'certificates',
+   u'costume department',
+   'country codes',
+   'language codes',
+   'cover url',
+   u'special effects department',
+   'special effects companies',
+   'sound mix',
+   u'location management',
+   'genres',
+   'director',
+   'stunt performer',
+   'miscellaneous companies',
+   'cinematographer',
+   'art direction',
+   'akas',
+   'aspect ratio',
+   u'production companies',
+   'kind',
+   u'art department',
+   'countries',
+   u'transportation department',
+   'plot outline',
+   'plot',
+   'cast',
+   u'animation department',
+   'original music',
+   u'editorial department',
+   'canonical title',
+   'long imdb title',
+   'long imdb canonical title',
+   'smart canonical title',
+   'smart long imdb canonical title',
+   'full-size cover url']
+
+  print "The genres associated with the movie are - ",movie['genres']
+
+  The genres associated with the movie are -  [u'Action', u'Sci-Fi']
+
+
+IMDB与TMDB的简单比较
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+现在我们同时使用两种方法获取同一部电影信息，对比一下两者有什么不同？
+
+::
+  
+  print "The genres for The Matrix pulled from IMDB are -",movie['genres']
+  print "The genres for The Matrix pulled from TMDB are -",get_movie_genres_tmdb("The Matrix")
+
+  The genres for The Matrix pulled from IMDB are - [u'Action', u'Sci-Fi']
+  The genres for The Matrix pulled from TMDB are - [{u'id': 28, u'name': u'Action'}, {u'id': 878, u'name': u'Science Fiction'}]
+
+
+我们可以看到，两种方法获取到的信息都是对的，但是他们用不同的方式打包信息。TMDB的标签是"Science Fiction"并且每一个种类都有一个ID号，而IMDB只有一个"Sci-Fi"的标签。因此在同时使用这两个数据集的时候，这些地方要注意一下。
+
+现在我们已经已经知道如何爬取一部电影的信息了，让我们朝着爬取更多电影更进一步吧？
+
+
+爬取多部电影：从TMDB获取排名前20的电影
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+我们首先实例化一个从TMDB的Movies类继承的对象。然后我们使用 popular() 方法获取排名靠前的电影。为了不仅仅只获取一页信息，可选的页面参数可以让我们获取指定任何页面的电影信息。
+
+::
+ 
+  all_movies=tmdb.Movies()
+  top_movies=all_movies.popular()
+
+  # 这是一个字典类型，我们使用 results 键返回排名前20的电影信息
+  print(len(top_movies['results']))
+  top20_movs=top_movies['results']
+
+
+我们来看一下其中一部电影。如下所示，可以看到和上面我们获取到的有关黑客帝国的电影信息有着相同的格式。这是一个字典类型，可以查询电影的具体信息。
+
+::
+  
+  first_movie=top20_movs[0]
+  print "Here is all the information you can get on this movie - "
+  print first_movie
+  print "\n\nThe title of the first movie is - ", first_movie['title']
+
+  {u'poster_path': u'/tWqifoYuwLETmmasnGHO7xBjEtt.jpg', u'title': u'Beauty and the Beast', u'overview': u"A live-action adaptation of Disney's version of the classic 'Beauty and the Beast' tale of a cursed prince and a beautiful young woman who helps him break the spell.", u'release_date': u'2017-03-16', u'popularity': 236.720585, u'original_title': u'Beauty and the Beast', u'backdrop_path': u'/6aUWe0GSl69wMTSWWexsorMIvwU.jpg', u'vote_count': 3801, u'video': False, u'adult': False, u'vote_average': 6.8, u'genre_ids': [10751, 14, 10749], u'id': 321612, u'original_language': u'en'}
+
+
+排名第一的电影名称是 - 美女与野兽
+
+我们来打印一下排名前五的电影名称！
+
+::
+  
+  for i in range(len(top20_movs)):
+    mov=top20_movs[i]
+    title=mov['title']
+    print title
+    if i==4:
+        break
+
+  Beauty and the Beast
+  Wonder Woman
+  Despicable Me 3
+  Spider-Man: Homecoming
+  Logan
+
+哦，看到《美女与野兽》排在《金刚狼》前面我有些失落！
+
+继续，我们可以用同样的方式获取他们的类别信息
+
+::
+  
+  for i in range(len(top20_movs)):
+    mov=top20_movs[i]
+    genres=mov['genre_ids']
+    print genres
+    if i==4:
+        break
+
+  [10751, 14, 10749]
+  [28, 12, 14]
+  [12, 16, 35, 10751]
+  [28, 12, 878]
+  [28, 18, 878]
+
+你可以看到，TMDB返回信息的并不是你想象的那样简单。为啥是这些编号？我要的是类别名称啊？当然，还有一个 Genre() 的类可以用来获取对应关系。我们继续把它完成！
+
+::
+  
+  # 创建一个tmdb类别对象!
+  genres=tmdb.Genres()
+  # Genre()的list()方法以字典形式返回一个包含所有类别的列表
+  list_of_genres=genres.list()['genres']
+
+让我们把这个列表转成字典方便我们从ID号获取对应的类别名称。
+
+::
+  
+  Genre_ID_to_name={}
+  for i in range(len(list_of_genres)):
+      genre_id=list_of_genres[i]['id']
+      genre_name=list_of_genres[i]['name']
+      Genre_ID_to_name[genre_id]=genre_name
+
+现在让我们重新输出一下排名前20的电影类别
+
+::
+
+  for i in range(len(top20_movs)):
+    mov=top20_movs[i]
+    title=mov['title']
+    genre_ids=mov['genre_ids']
+    genre_names=[]
+    for id in genre_ids:
+        genre_name=Genre_ID_to_name[id]
+        genre_names.append(genre_name)
+    print title,genre_names
+    if i==4:
+        break
+
+  Beauty and the Beast [u'Family', u'Fantasy', u'Romance']
+  Wonder Woman [u'Action', u'Adventure', u'Fantasy']
+  Despicable Me 3 [u'Adventure', u'Animation', u'Comedy', u'Family']
+  Spider-Man: Homecoming [u'Action', u'Adventure', u'Science Fiction']
+  Logan [u'Action', u'Drama', u'Science Fiction']

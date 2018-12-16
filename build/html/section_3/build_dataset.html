@@ -102,7 +102,9 @@
 <li class="toctree-l3"><a class="reference internal" href="#id3">以下是为收集数据而要采取的技术步骤的概要</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#tmdb">登录TMDB并设置好准备获取电影原始数据</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#tmdbapi">使用从TMDB申请到的API密钥获取电影信息</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#imdb">从IMDB获取信息</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#imdb">从IMDB获取电影信息</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">IMDB与TMDB的简单比较</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tmdb20">爬取多部电影：从TMDB获取排名前20的电影</a></li>
 </ul>
 </li>
 </ul>
@@ -364,7 +366,191 @@
 </div>
 </div>
 <div class="section" id="imdb">
-<h2>从IMDB获取信息<a class="headerlink" href="#imdb" title="永久链接至标题">¶</a></h2>
+<h2>从IMDB获取电影信息<a class="headerlink" href="#imdb" title="永久链接至标题">¶</a></h2>
+<p>现在我们已经知道如何从TMDB获取信息了，现在我们再看看如何从IMDB获取同样的电影信息。我们可以把信息结合起来获得一个更大的数据集。我也推荐你尝试本教程之外的更多的方式看看能获取出什么样的数据集。由于两个数据集存在差异，所以需要做一些数据清洗，尽管这两个数据集已经很精简了。</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="c1"># 创建一个IMDB对象用来访问IMDB数据库</span>
+<span class="n">imbd_object</span> <span class="o">=</span> <span class="n">imdb</span><span class="o">.</span><span class="n">IMDb</span><span class="p">()</span> <span class="c1"># 默认可以访问互联网</span>
+
+<span class="c1"># 查找一部电影（返回电影对象列表）</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">imbd_object</span><span class="o">.</span><span class="n">search_movie</span><span class="p">(</span><span class="s1">&#39;The Matrix&#39;</span><span class="p">)</span>
+
+<span class="c1"># 在此我们只选用返回列表的第一个字段</span>
+<span class="n">movie</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="n">imbd_object</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">movie</span><span class="p">)</span>
+
+<span class="nb">print</span> <span class="s2">&quot;All the information we can get about this movie from IMDB-&quot;</span>
+<span class="n">movie</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>我们能从IMDB获取到这部电影的所有信息如下</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="p">[</span><span class="s1">u&#39;music department&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;sound crew&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;camera and electrical department&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;distributors&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;rating&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;runtimes&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;costume designer&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;make up&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;year&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;production design&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;miscellaneous crew&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;color info&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;casting department&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;languages&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;votes&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;producer&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;title&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;mpaa&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;assistant director&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;writer&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;production manager&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;casting director&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;visual effects&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;top 250 rank&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;set decoration&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;editor&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;certificates&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;costume department&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;country codes&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;language codes&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;cover url&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;special effects department&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;special effects companies&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;sound mix&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;location management&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;genres&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;director&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;stunt performer&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;miscellaneous companies&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;cinematographer&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;art direction&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;akas&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;aspect ratio&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;production companies&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;kind&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;art department&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;countries&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;transportation department&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;plot outline&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;plot&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;cast&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;animation department&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;original music&#39;</span><span class="p">,</span>
+ <span class="s1">u&#39;editorial department&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;canonical title&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;long imdb title&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;long imdb canonical title&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;smart canonical title&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;smart long imdb canonical title&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;full-size cover url&#39;</span><span class="p">]</span>
+
+<span class="nb">print</span> <span class="s2">&quot;The genres associated with the movie are - &quot;</span><span class="p">,</span><span class="n">movie</span><span class="p">[</span><span class="s1">&#39;genres&#39;</span><span class="p">]</span>
+
+<span class="n">The</span> <span class="n">genres</span> <span class="n">associated</span> <span class="k">with</span> <span class="n">the</span> <span class="n">movie</span> <span class="n">are</span> <span class="o">-</span>  <span class="p">[</span><span class="s1">u&#39;Action&#39;</span><span class="p">,</span> <span class="s1">u&#39;Sci-Fi&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id4">
+<h2>IMDB与TMDB的简单比较<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
+<p>现在我们同时使用两种方法获取同一部电影信息，对比一下两者有什么不同？</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="nb">print</span> <span class="s2">&quot;The genres for The Matrix pulled from IMDB are -&quot;</span><span class="p">,</span><span class="n">movie</span><span class="p">[</span><span class="s1">&#39;genres&#39;</span><span class="p">]</span>
+<span class="nb">print</span> <span class="s2">&quot;The genres for The Matrix pulled from TMDB are -&quot;</span><span class="p">,</span><span class="n">get_movie_genres_tmdb</span><span class="p">(</span><span class="s2">&quot;The Matrix&quot;</span><span class="p">)</span>
+
+<span class="n">The</span> <span class="n">genres</span> <span class="k">for</span> <span class="n">The</span> <span class="n">Matrix</span> <span class="n">pulled</span> <span class="kn">from</span> <span class="nn">IMDB</span> <span class="n">are</span> <span class="o">-</span> <span class="p">[</span><span class="s1">u&#39;Action&#39;</span><span class="p">,</span> <span class="s1">u&#39;Sci-Fi&#39;</span><span class="p">]</span>
+<span class="n">The</span> <span class="n">genres</span> <span class="k">for</span> <span class="n">The</span> <span class="n">Matrix</span> <span class="n">pulled</span> <span class="kn">from</span> <span class="nn">TMDB</span> <span class="n">are</span> <span class="o">-</span> <span class="p">[{</span><span class="s1">u&#39;id&#39;</span><span class="p">:</span> <span class="mi">28</span><span class="p">,</span> <span class="s1">u&#39;name&#39;</span><span class="p">:</span> <span class="s1">u&#39;Action&#39;</span><span class="p">},</span> <span class="p">{</span><span class="s1">u&#39;id&#39;</span><span class="p">:</span> <span class="mi">878</span><span class="p">,</span> <span class="s1">u&#39;name&#39;</span><span class="p">:</span> <span class="s1">u&#39;Science Fiction&#39;</span><span class="p">}]</span>
+</pre></div>
+</div>
+<p>我们可以看到，两种方法获取到的信息都是对的，但是他们用不同的方式打包信息。TMDB的标签是”Science Fiction”并且每一个种类都有一个ID号，而IMDB只有一个”Sci-Fi”的标签。因此在同时使用这两个数据集的时候，这些地方要注意一下。</p>
+<p>现在我们已经已经知道如何爬取一部电影的信息了，让我们朝着爬取更多电影更进一步吧？</p>
+</div>
+<div class="section" id="tmdb20">
+<h2>爬取多部电影：从TMDB获取排名前20的电影<a class="headerlink" href="#tmdb20" title="永久链接至标题">¶</a></h2>
+<p>我们首先实例化一个从TMDB的Movies类继承的对象。然后我们使用 popular() 方法获取排名靠前的电影。为了不仅仅只获取一页信息，可选的页面参数可以让我们获取指定任何页面的电影信息。</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">all_movies</span><span class="o">=</span><span class="n">tmdb</span><span class="o">.</span><span class="n">Movies</span><span class="p">()</span>
+<span class="n">top_movies</span><span class="o">=</span><span class="n">all_movies</span><span class="o">.</span><span class="n">popular</span><span class="p">()</span>
+
+<span class="c1"># 这是一个字典类型，我们使用 results 键返回排名前20的电影信息</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">top_movies</span><span class="p">[</span><span class="s1">&#39;results&#39;</span><span class="p">]))</span>
+<span class="n">top20_movs</span><span class="o">=</span><span class="n">top_movies</span><span class="p">[</span><span class="s1">&#39;results&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>我们来看一下其中一部电影。如下所示，可以看到和上面我们获取到的有关黑客帝国的电影信息有着相同的格式。这是一个字典类型，可以查询电影的具体信息。</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">first_movie</span><span class="o">=</span><span class="n">top20_movs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="nb">print</span> <span class="s2">&quot;Here is all the information you can get on this movie - &quot;</span>
+<span class="nb">print</span> <span class="n">first_movie</span>
+<span class="nb">print</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">The title of the first movie is - &quot;</span><span class="p">,</span> <span class="n">first_movie</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">]</span>
+
+<span class="p">{</span><span class="s1">u&#39;poster_path&#39;</span><span class="p">:</span> <span class="s1">u&#39;/tWqifoYuwLETmmasnGHO7xBjEtt.jpg&#39;</span><span class="p">,</span> <span class="s1">u&#39;title&#39;</span><span class="p">:</span> <span class="s1">u&#39;Beauty and the Beast&#39;</span><span class="p">,</span> <span class="s1">u&#39;overview&#39;</span><span class="p">:</span> <span class="s2">u&quot;A live-action adaptation of Disney&#39;s version of the classic &#39;Beauty and the Beast&#39; tale of a cursed prince and a beautiful young woman who helps him break the spell.&quot;</span><span class="p">,</span> <span class="s1">u&#39;release_date&#39;</span><span class="p">:</span> <span class="s1">u&#39;2017-03-16&#39;</span><span class="p">,</span> <span class="s1">u&#39;popularity&#39;</span><span class="p">:</span> <span class="mf">236.720585</span><span class="p">,</span> <span class="s1">u&#39;original_title&#39;</span><span class="p">:</span> <span class="s1">u&#39;Beauty and the Beast&#39;</span><span class="p">,</span> <span class="s1">u&#39;backdrop_path&#39;</span><span class="p">:</span> <span class="s1">u&#39;/6aUWe0GSl69wMTSWWexsorMIvwU.jpg&#39;</span><span class="p">,</span> <span class="s1">u&#39;vote_count&#39;</span><span class="p">:</span> <span class="mi">3801</span><span class="p">,</span> <span class="s1">u&#39;video&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">u&#39;adult&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">u&#39;vote_average&#39;</span><span class="p">:</span> <span class="mf">6.8</span><span class="p">,</span> <span class="s1">u&#39;genre_ids&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">10751</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">10749</span><span class="p">],</span> <span class="s1">u&#39;id&#39;</span><span class="p">:</span> <span class="mi">321612</span><span class="p">,</span> <span class="s1">u&#39;original_language&#39;</span><span class="p">:</span> <span class="s1">u&#39;en&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>排名第一的电影名称是 - 美女与野兽</p>
+<p>我们来打印一下排名前五的电影名称！</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">top20_movs</span><span class="p">)):</span>
+  <span class="n">mov</span><span class="o">=</span><span class="n">top20_movs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+  <span class="n">title</span><span class="o">=</span><span class="n">mov</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">]</span>
+  <span class="nb">print</span> <span class="n">title</span>
+  <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">4</span><span class="p">:</span>
+      <span class="k">break</span>
+
+<span class="n">Beauty</span> <span class="ow">and</span> <span class="n">the</span> <span class="n">Beast</span>
+<span class="n">Wonder</span> <span class="n">Woman</span>
+<span class="n">Despicable</span> <span class="n">Me</span> <span class="mi">3</span>
+<span class="n">Spider</span><span class="o">-</span><span class="n">Man</span><span class="p">:</span> <span class="n">Homecoming</span>
+<span class="n">Logan</span>
+</pre></div>
+</div>
+<p>哦，看到《美女与野兽》排在《金刚狼》前面我有些失落！</p>
+<p>继续，我们可以用同样的方式获取他们的类别信息</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">top20_movs</span><span class="p">)):</span>
+  <span class="n">mov</span><span class="o">=</span><span class="n">top20_movs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+  <span class="n">genres</span><span class="o">=</span><span class="n">mov</span><span class="p">[</span><span class="s1">&#39;genre_ids&#39;</span><span class="p">]</span>
+  <span class="nb">print</span> <span class="n">genres</span>
+  <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">4</span><span class="p">:</span>
+      <span class="k">break</span>
+
+<span class="p">[</span><span class="mi">10751</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">10749</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">28</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">14</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">12</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="mi">10751</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">28</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">878</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">28</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="mi">878</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>你可以看到，TMDB返回信息的并不是你想象的那样简单。为啥是这些编号？我要的是类别名称啊？当然，还有一个 Genre() 的类可以用来获取对应关系。我们继续把它完成！</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="c1"># 创建一个tmdb类别对象!</span>
+<span class="n">genres</span><span class="o">=</span><span class="n">tmdb</span><span class="o">.</span><span class="n">Genres</span><span class="p">()</span>
+<span class="c1"># Genre()的list()方法以字典形式返回一个包含所有类别的列表</span>
+<span class="n">list_of_genres</span><span class="o">=</span><span class="n">genres</span><span class="o">.</span><span class="n">list</span><span class="p">()[</span><span class="s1">&#39;genres&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>让我们把这个列表转成字典方便我们从ID号获取对应的类别名称。</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">Genre_ID_to_name</span><span class="o">=</span><span class="p">{}</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">list_of_genres</span><span class="p">)):</span>
+    <span class="n">genre_id</span><span class="o">=</span><span class="n">list_of_genres</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
+    <span class="n">genre_name</span><span class="o">=</span><span class="n">list_of_genres</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
+    <span class="n">Genre_ID_to_name</span><span class="p">[</span><span class="n">genre_id</span><span class="p">]</span><span class="o">=</span><span class="n">genre_name</span>
+</pre></div>
+</div>
+<p>现在让我们重新输出一下排名前20的电影类别</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">top20_movs</span><span class="p">)):</span>
+  <span class="n">mov</span><span class="o">=</span><span class="n">top20_movs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+  <span class="n">title</span><span class="o">=</span><span class="n">mov</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">]</span>
+  <span class="n">genre_ids</span><span class="o">=</span><span class="n">mov</span><span class="p">[</span><span class="s1">&#39;genre_ids&#39;</span><span class="p">]</span>
+  <span class="n">genre_names</span><span class="o">=</span><span class="p">[]</span>
+  <span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">genre_ids</span><span class="p">:</span>
+      <span class="n">genre_name</span><span class="o">=</span><span class="n">Genre_ID_to_name</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span>
+      <span class="n">genre_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">genre_name</span><span class="p">)</span>
+  <span class="nb">print</span> <span class="n">title</span><span class="p">,</span><span class="n">genre_names</span>
+  <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">4</span><span class="p">:</span>
+      <span class="k">break</span>
+
+<span class="n">Beauty</span> <span class="ow">and</span> <span class="n">the</span> <span class="n">Beast</span> <span class="p">[</span><span class="s1">u&#39;Family&#39;</span><span class="p">,</span> <span class="s1">u&#39;Fantasy&#39;</span><span class="p">,</span> <span class="s1">u&#39;Romance&#39;</span><span class="p">]</span>
+<span class="n">Wonder</span> <span class="n">Woman</span> <span class="p">[</span><span class="s1">u&#39;Action&#39;</span><span class="p">,</span> <span class="s1">u&#39;Adventure&#39;</span><span class="p">,</span> <span class="s1">u&#39;Fantasy&#39;</span><span class="p">]</span>
+<span class="n">Despicable</span> <span class="n">Me</span> <span class="mi">3</span> <span class="p">[</span><span class="s1">u&#39;Adventure&#39;</span><span class="p">,</span> <span class="s1">u&#39;Animation&#39;</span><span class="p">,</span> <span class="s1">u&#39;Comedy&#39;</span><span class="p">,</span> <span class="s1">u&#39;Family&#39;</span><span class="p">]</span>
+<span class="n">Spider</span><span class="o">-</span><span class="n">Man</span><span class="p">:</span> <span class="n">Homecoming</span> <span class="p">[</span><span class="s1">u&#39;Action&#39;</span><span class="p">,</span> <span class="s1">u&#39;Adventure&#39;</span><span class="p">,</span> <span class="s1">u&#39;Science Fiction&#39;</span><span class="p">]</span>
+<span class="n">Logan</span> <span class="p">[</span><span class="s1">u&#39;Action&#39;</span><span class="p">,</span> <span class="s1">u&#39;Drama&#39;</span><span class="p">,</span> <span class="s1">u&#39;Science Fiction&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
 </div>
 </div>
 
