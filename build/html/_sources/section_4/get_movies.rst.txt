@@ -45,14 +45,59 @@
 
 ::
 
-  # This function just generates all possible pairs of movies
+  # 此方法生成所有可能的电影组合
   def list2pairs(l):
-      # itertools.combinations(l,2) makes all pairs of length 2 from list l.
+      # itertools.combinations(l,2) 从列表l中生成长度为2的组合
       pairs = list(itertools.combinations(l, 2))
-      # then the one item pairs, as duplicate pairs aren't accounted for by itertools
+      # 然后是长度为1的组合，重复的组合不会被itertools计算
       for i in l:
           pairs.append([i,i])
       return pairs
 
-深入探讨同时出现的类型
+如我所说，现在我们要抓取每部电影的类型数据，然后使用上面的方法计算两种类型同时出现的概率
+
+::
+  
+  # get all genre lists pairs from all movies
+  allPairs = []
+  for movie in top1000_movies:
+      allPairs.extend(list2pairs(movie['genre_ids']))
+    
+  nr_ids = np.unique(allPairs)
+  visGrid = np.zeros((len(nr_ids), len(nr_ids)))
+  for p in allPairs:
+      visGrid[np.argwhere(nr_ids==p[0]), np.argwhere(nr_ids==p[1])]+=1
+      if p[1] != p[0]:
+          visGrid[np.argwhere(nr_ids==p[1]), np.argwhere(nr_ids==p[0])]+=1
+
+让我们看看刚刚新建的数据结构。这是一个如下所示的19X19的结构。也就是说我们有19中类型，不用说，这种结构计算了同一部电影中同时出现的类型的数量。
+
+::
+  
+  print visGrid.shape
+  print len(Genre_ID_to_name.keys())
+
+  (19, 19)
+  19
+
+::
+
+  annot_lookup = []
+  for i in xrange(len(nr_ids)):
+      annot_lookup.append(Genre_ID_to_name[nr_ids[i]])
+
+  sns.heatmap(visGrid, xticklabels=annot_lookup, yticklabels=annot_lookup)
+
+.. image:: 19genres.png
+
+上图以热力图的形式展现了经常同时出现的类型的分布
+
+在上面的图中需要注意的重要一点是对角线。对角线对应的是自我对应，即一个类型出现的次数，例如戏剧与戏剧一起出现的次数。这基本上可以认为是一种类型发生的总次数的计数!
+
+我们也可以看到许多数据集中在戏剧类型上，当然这也是一个很通用的类型标签。几乎没有纪录片或者是电视电影出现。恐怖片是一个非常独特的类别，浪漫类型也不是分布很广。
+
+为了了解这些数据不均匀的原因，我们可以尝试多种方式来探索可能发现的一些有趣关系。
+
+
+深入探索同时出现的类型
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

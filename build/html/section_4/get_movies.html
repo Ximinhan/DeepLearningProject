@@ -99,7 +99,7 @@
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">第四章</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">构建要使用的数据集:让我们看看数据库中的前1000部电影</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id2">结对分析电影类型</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id3">深入探讨同时出现的类型</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">深入探索同时出现的类型</a></li>
 </ul>
 </li>
 </ul>
@@ -210,19 +210,53 @@
 <h2>结对分析电影类型<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
 <p>由于我们的数据集是多标签的，仅仅只是关注类型分类是不充分的。观察哪些类型同时出现可能是有益的，因为它可能有助于揭示我们数据集中的固有偏见。例如，如果浪漫和喜剧比纪录片和喜剧更经常地出现在一起，那是有意义的。这种固有的偏见告诉我们，我们从自身抽样的潜在人群是不平衡的。然后我们可以采取步骤来考虑这些问题。即使我们不采取这些步骤，重要的是要意识到我们所做的假设是不平衡的数据集不会损害我们的性能，如果需要，我们可以回过头来修正这个假设。古老但有用的科学方法，不是吗?</p>
 <p>所以对于前1000部电影，我们来做一些类型分布的结对分析。我们的主要目的是看哪些类型的电影出现在同一部电影中。因此，我们首先定义一个函数，它取一个列表，并从中生成所有可能的对。然后，我们提取电影的类型列表，并在类型列表上运行这个函数，以获得所有同时出现的类型对。</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="c1"># This function just generates all possible pairs of movies</span>
+<div class="highlight-default"><div class="highlight"><pre><span class="c1"># 此方法生成所有可能的电影组合</span>
 <span class="k">def</span> <span class="nf">list2pairs</span><span class="p">(</span><span class="n">l</span><span class="p">):</span>
-    <span class="c1"># itertools.combinations(l,2) makes all pairs of length 2 from list l.</span>
+    <span class="c1"># itertools.combinations(l,2) 从列表l中生成长度为2的组合</span>
     <span class="n">pairs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
-    <span class="c1"># then the one item pairs, as duplicate pairs aren&#39;t accounted for by itertools</span>
+    <span class="c1"># 然后是长度为1的组合，重复的组合不会被itertools计算</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">l</span><span class="p">:</span>
         <span class="n">pairs</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">])</span>
     <span class="k">return</span> <span class="n">pairs</span>
 </pre></div>
 </div>
+<p>如我所说，现在我们要抓取每部电影的类型数据，然后使用上面的方法计算两种类型同时出现的概率</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="c1"># get all genre lists pairs from all movies</span>
+<span class="n">allPairs</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">movie</span> <span class="ow">in</span> <span class="n">top1000_movies</span><span class="p">:</span>
+    <span class="n">allPairs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">list2pairs</span><span class="p">(</span><span class="n">movie</span><span class="p">[</span><span class="s1">&#39;genre_ids&#39;</span><span class="p">]))</span>
+
+<span class="n">nr_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">allPairs</span><span class="p">)</span>
+<span class="n">visGrid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">nr_ids</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">nr_ids</span><span class="p">)))</span>
+<span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">allPairs</span><span class="p">:</span>
+    <span class="n">visGrid</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">nr_ids</span><span class="o">==</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">nr_ids</span><span class="o">==</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span><span class="o">+=</span><span class="mi">1</span>
+    <span class="k">if</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="n">visGrid</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">nr_ids</span><span class="o">==</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">nr_ids</span><span class="o">==</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span><span class="o">+=</span><span class="mi">1</span>
+</pre></div>
+</div>
+<p>让我们看看刚刚新建的数据结构。这是一个如下所示的19X19的结构。也就是说我们有19中类型，不用说，这种结构计算了同一部电影中同时出现的类型的数量。</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="nb">print</span> <span class="n">visGrid</span><span class="o">.</span><span class="n">shape</span>
+<span class="nb">print</span> <span class="nb">len</span><span class="p">(</span><span class="n">Genre_ID_to_name</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+<span class="p">(</span><span class="mi">19</span><span class="p">,</span> <span class="mi">19</span><span class="p">)</span>
+<span class="mi">19</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">annot_lookup</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nr_ids</span><span class="p">)):</span>
+    <span class="n">annot_lookup</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Genre_ID_to_name</span><span class="p">[</span><span class="n">nr_ids</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span>
+
+<span class="n">sns</span><span class="o">.</span><span class="n">heatmap</span><span class="p">(</span><span class="n">visGrid</span><span class="p">,</span> <span class="n">xticklabels</span><span class="o">=</span><span class="n">annot_lookup</span><span class="p">,</span> <span class="n">yticklabels</span><span class="o">=</span><span class="n">annot_lookup</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="../_images/19genres.png" src="../_images/19genres.png" />
+<p>上图以热力图的形式展现了经常同时出现的类型的分布</p>
+<p>在上面的图中需要注意的重要一点是对角线。对角线对应的是自我对应，即一个类型出现的次数，例如戏剧与戏剧一起出现的次数。这基本上可以认为是一种类型发生的总次数的计数!</p>
+<p>我们也可以看到许多数据集中在戏剧类型上，当然这也是一个很通用的类型标签。几乎没有纪录片或者是电视电影出现。恐怖片是一个非常独特的类别，浪漫类型也不是分布很广。</p>
+<p>为了了解这些数据不均匀的原因，我们可以尝试多种方式来探索可能发现的一些有趣关系。</p>
 </div>
 <div class="section" id="id3">
-<h2>深入探讨同时出现的类型<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
+<h2>深入探索同时出现的类型<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
 </div>
 </div>
 
