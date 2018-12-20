@@ -100,6 +100,7 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">构建要使用的数据集:让我们看看数据库中的前1000部电影</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id2">结对分析电影类型</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#id3">深入探索同时出现的类型</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">有趣的问题</a></li>
 </ul>
 </li>
 </ul>
@@ -258,6 +259,36 @@
 <div class="section" id="id3">
 <h2>深入探索同时出现的类型<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
 <p>我们现在要做的是寻找一些同时出现类型的最佳集合，并看看逻辑上对我们是否有用？直观来说，看到上图呈现出正方形聚集不会太意外–大多数分布在正方形区域也就是说某些类型总是同时出现而与其他类型却很少交互。某种意义上说，这将凸显并区分出哪些类型同时出现而哪些不是。</p>
+<p>尽管这些数据也许不会直接显示，但我们可以分析一下这些数据。这里用到的技术叫做双聚类分析。</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">sklearn.cluster</span> <span class="k">import</span> <span class="n">SpectralCoclustering</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">SpectralCoclustering</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">visGrid</span><span class="p">)</span>
+
+<span class="n">fit_data</span> <span class="o">=</span> <span class="n">visGrid</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">row_labels_</span><span class="p">)]</span>
+<span class="n">fit_data</span> <span class="o">=</span> <span class="n">fit_data</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">column_labels_</span><span class="p">)]</span>
+
+<span class="n">annot_lookup_sorted</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">row_labels_</span><span class="p">):</span>
+    <span class="n">annot_lookup_sorted</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Genre_ID_to_name</span><span class="p">[</span><span class="n">nr_ids</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span>
+
+<span class="n">sns</span><span class="o">.</span><span class="n">heatmap</span><span class="p">(</span><span class="n">fit_data</span><span class="p">,</span> <span class="n">xticklabels</span><span class="o">=</span><span class="n">annot_lookup_sorted</span><span class="p">,</span> <span class="n">yticklabels</span><span class="o">=</span><span class="n">annot_lookup_sorted</span><span class="p">,</span> <span class="n">annot</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;After biclustering; rearranged to show biclusters&quot;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img alt="../_images/bicluster.png" src="../_images/bicluster.png" />
+<p>请看上图，“正方形”或者说一组电影类型自动出现了！</p>
+<p>直观来看，犯罪，科幻，悬疑，动作，戏剧，惊悚等类型同时出现，另一方面，浪漫，科幻，家庭，音乐，冒险等类型同事出现。</p>
+<p>这很有直观意义，对吧？</p>
+<p>一个比较有挑战性的地方是戏剧类型具有广泛分布。它使得图中两大类集合高度重叠。如果我们使其与动作，惊悚等类型合并，那么几乎所有电影都会贴上这个标签。</p>
+<p>根据以上内容的分析，我们可以将数据归类为“戏剧、动作、科幻、刺激（惊悚、犯罪、神秘）、振奋（冒险、幻想、动画、喜剧、浪漫、家庭）、恐怖、历史”等流派。</p>
+<p>注意：这种分类是主观的，绝不是唯一的正确解决方案。也可以只保留原始标签，只排除那些没有足够数据的标签。这些技巧对于平衡数据集很重要，它允许我们增加或减少某些信号的强度，使得改进我们的推断成为可能：）</p>
+</div>
+<div class="section" id="id4">
+<h2>有趣的问题<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
+<p>在这你可以尽情发挥想象力，应该会想出一些比我更好的问题。</p>
+<p>以下是一些我的想法：</p>
 </div>
 </div>
 

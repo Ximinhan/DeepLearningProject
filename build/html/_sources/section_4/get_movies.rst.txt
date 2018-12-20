@@ -103,3 +103,47 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 我们现在要做的是寻找一些同时出现类型的最佳集合，并看看逻辑上对我们是否有用？直观来说，看到上图呈现出正方形聚集不会太意外--大多数分布在正方形区域也就是说某些类型总是同时出现而与其他类型却很少交互。某种意义上说，这将凸显并区分出哪些类型同时出现而哪些不是。
+
+尽管这些数据也许不会直接显示，但我们可以分析一下这些数据。这里用到的技术叫做双聚类分析。
+
+::
+
+  from sklearn.cluster import SpectralCoclustering
+  model = SpectralCoclustering(n_clusters=5)
+  model.fit(visGrid)
+
+  fit_data = visGrid[np.argsort(model.row_labels_)]
+  fit_data = fit_data[:, np.argsort(model.column_labels_)]
+
+  annot_lookup_sorted = []
+  for i in np.argsort(model.row_labels_):
+      annot_lookup_sorted.append(Genre_ID_to_name[nr_ids[i]])
+    
+  sns.heatmap(fit_data, xticklabels=annot_lookup_sorted, yticklabels=annot_lookup_sorted, annot=False)
+  plt.title("After biclustering; rearranged to show biclusters")
+
+  plt.show()
+
+
+.. image:: bicluster.png
+
+请看上图，“正方形”或者说一组电影类型自动出现了！
+
+直观来看，犯罪，科幻，悬疑，动作，戏剧，惊悚等类型同时出现，另一方面，浪漫，科幻，家庭，音乐，冒险等类型同事出现。
+
+这很有直观意义，对吧？
+
+一个比较有挑战性的地方是戏剧类型具有广泛分布。它使得图中两大类集合高度重叠。如果我们使其与动作，惊悚等类型合并，那么几乎所有电影都会贴上这个标签。
+
+根据以上内容的分析，我们可以将数据归类为“戏剧、动作、科幻、刺激（惊悚、犯罪、神秘）、振奋（冒险、幻想、动画、喜剧、浪漫、家庭）、恐怖、历史”等流派。
+
+注意：这种分类是主观的，绝不是唯一的正确解决方案。也可以只保留原始标签，只排除那些没有足够数据的标签。这些技巧对于平衡数据集很重要，它允许我们增加或减少某些信号的强度，使得改进我们的推断成为可能：）
+
+
+有趣的问题
+~~~~~~~~~~~~~~~~~~
+
+在这你可以尽情发挥想象力，应该会想出一些比我更好的问题。
+
+以下是一些我的想法：
+
