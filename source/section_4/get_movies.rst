@@ -104,6 +104,7 @@
 
 我们现在要做的是寻找一些同时出现类型的最佳集合，并看看逻辑上对我们是否有用？直观来说，看到上图呈现出正方形聚集不会太意外--大多数分布在正方形区域也就是说某些类型总是同时出现而与其他类型却很少交互。某种意义上说，这将凸显并区分出哪些类型同时出现而哪些不是。
 
+
 尽管这些数据也许不会直接显示，但我们可以分析一下这些数据。这里用到的技术叫做双聚类分析。
 
 ::
@@ -123,7 +124,6 @@
   plt.title("After biclustering; rearranged to show biclusters")
 
   plt.show()
-
 
 .. image:: bicluster.png
 
@@ -146,5 +146,172 @@
 在这你可以尽情发挥想象力，应该会想出一些比我更好的问题。
 
 以下是一些我的想法：
-
  - 在一些电影中，哪些演员总是演某种类型，而有些演员却不拘泥于特定类型？
+ - 在最近几年中是否有某种流行趋势？
+ - 你能用音轨来识别电影的类型吗？
+ - 著名的浪漫类型演员的薪水是否比著名的动作演员高？
+ - 如果你看上映日期和流行度得分，哪种电影类型有更长的保质期？
+
+关于按种类拓展特征相关性的一些想法：
+ - 标题的长度是否与电影类型有关？
+ - 恐怖片相较于浪漫和喜剧片，电影海报是否颜色更阴暗？
+ - 某些类型电影是否在一年中某些特殊档期发布更多？
+ - RPG等级与电影类型有关么？
+
+
+基于这个新的数据集，我们现在可以从TMDB抓取海报来作为我们的训练数据了！
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+::
+  
+  # 在开始之前，我们从pickle文件中读取数据以保持数据一致性！
+  # 我们现在对每个类型采样100部电影。有一个问题是由于排名是按流行程度排序的，因此可能会有重复。
+  # 我们需要移除已经采样的那些电影。
+  movies = []
+  baseyear = 2017
+
+  print('Starting pulling movies from TMDB. If you want to debug, uncomment the print command. This will take a while, please wait...')
+  done_ids=[]
+  for g_id in nr_ids:
+      #print('Pulling movies for genre ID '+g_id)
+      baseyear -= 1
+      for page in xrange(1,6,1):
+          time.sleep(0.5)
+    
+          url = 'https://api.themoviedb.org/3/discover/movie?api_key=' + api_key
+          url += '&language=en-US&sort_by=popularity.desc&year=' + str(baseyear) 
+          url += '&with_genres=' + str(g_id) + '&page=' + str(page)
+
+          data = urllib2.urlopen(url).read()
+
+          dataDict = json.loads(data)
+          movies.extend(dataDict["results"])
+      done_ids.append(str(g_id))
+  print("Pulled movies for genres - "+','.join(done_ids))
+  #Pulled movies for genres - 12
+
+现在开始从TMDB获取电影数据。如果你想调试可以将那条打印语句取消注释。这会运行一段时间，请耐心等待。。。
+
+::
+  
+  f6=open("movies_for_posters",'rb')
+  movies=pickle.load(f6)
+  f6.close()
+
+让我们去除列表中那些重复数据。
+
+::
+  
+  movie_ids = [m['id'] for m in movies]
+  print "originally we had ",len(movie_ids)," movies"
+  movie_ids=np.unique(movie_ids)
+  print len(movie_ids)
+  seen_before=[]
+  no_duplicate_movies=[]
+  for i in range(len(movies)):
+      movie=movies[i]
+      id=movie['id']
+      if id in seen_before:
+          continue
+  #         print "Seen before"
+      else:
+          seen_before.append(id)
+          no_duplicate_movies.append(movie)
+  print "After removing duplicates we have ",len(no_duplicate_movies), " movies"
+
+originally we had  1670  movies
+1608
+After removing duplicates we have  1608  movies
+
+同时，我们删除那些没有海报的电影！
+
+::
+
+  poster_movies=[]
+  counter=0
+  movies_no_poster=[]
+  print("Total movies : ",len(movies))
+  print("Started downloading posters...")
+  for movie in movies:
+      id=movie['id']
+      title=movie['title']
+      if counter==1:
+          print('Downloaded first. Code is working fine. Please wait, this will take quite some time...')
+      if counter%300==0 and counter!=0:
+          print "Done with ",counter," movies!"
+          print "Trying to get poster for ",title
+      try:
+          grab_poster_tmdb(title)
+          poster_movies.append(movie)
+      except:
+          try:
+              time.sleep(7)
+              grab_poster_tmdb(title)
+              poster_movies.append(movie)
+          except:
+              movies_no_poster.append(movie)
+      counter+=1
+  print("Done with all the posters!")
+
+('Total movies : ', 1670)
+Started downloading posters...
+Downloaded first. Code is working fine. Please wait, this will take quite some time...
+Done with  300  movies!
+Trying to get poster for  Gravity
+Done with  600  movies!
+Trying to get poster for  Zombieland
+Done with  900  movies!
+Trying to get poster for  The Substitute
+Done with  1200  movies!
+Trying to get poster for  Decoys
+Done with  1500  movies!
+Trying to get poster for  Lost and Delirious
+Done with all the posters!
+
+::
+
+  print len(movies_no_poster)
+  print len(poster_movies)
+
+170
+1500
+
+::
+  
+  f=open('poster_movies.pckl','r')
+  poster_movies=pickle.load(f)
+  f.close()
+
+::
+  
+  f=open('no_poster_movies.pckl','r')
+  movies_no_poster=pickle.load(f)
+  f.close()
+
+恭喜，我们已经完成了信息爬取！
+
+基于离散信息建立数据集！
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+这个任务很简单但是非常重要。基本上这将构建整个项目的基础。鉴于你可以在我提供的框架中自由构建自己的项目，你必须做出许多决定来完成你自己版本的项目。
+
+当我们处理分类问题时，我们需要根据手头的数据做出两个决定：
+
+ - 我们想要预测什么，也就是我们的 Y 是什么？
+ - 我们用什么特征去预测这个 Y ，也就是我们应该用什么作为 X ？
+
+有很多不同的选项，由你来决定什么是最好的。我将以我的版本为例，但你必须思考一下然后想出一个你认为最好的版本！
+
+作为举例，这里有很多方式构建 Y，仍然拿类型预测问题来说：
+
+ - 假设每个电影都有多种类型，这就变成了一个多标签分类问题。比方说，一个电影可以同时是动作类，恐怖类和探险类。也就是说，每部电影可以有多个分类。
+ - 利用我们在第一节学到的双聚类分析生成类型组，这样每个电影就只有一个类型了。这样，问题就简化成了多类问题。比方说某个电影拥有这样的类型-刺激的，或是恐怖的，或是历史的。每个电影就只有一个分类。
+
+为了实现这个目的，我将从上面的第一种情况开始-即多标签分类问题。
+
+类似地，为了设计我们的输入特性，即X，您可以选择您认为有意义的任何特性，例如，电影的导演可能是流派的良好预测器。或者，他们可以选择使用PCA等算法设计的任何特性。鉴于IMDB、TMDB和维基百科等替代资源的丰富性，有很多可用的选项。这里要有创意！
+
+另一件需要注意的重要事情是，在这样做时，我们还必须在途中做出许多更小的实现决策。例如，我们将包括哪些流派？我们要包括哪些电影？所有这些都是开放式的！
+
+我的实现
+~~~~~~~~~~~~~~~~~
