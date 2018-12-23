@@ -441,3 +441,106 @@ After his career is destroyed, a brilliant but arrogant surgeon gets a new lease
 
 我们如何在矩阵中存储电影概述？
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+我们是否就是把整个字符串存起来？我们知道我们需要数字，但这些都是文本。我们该怎么办？！
+
+我们将使用一个称为'单词包'表速法的方法来存储X矩阵。在这里这种表示法的基本思想是我们可以把电影评论中可能出现的所有不同的单词作为不同的对象。然后每个电影的概述可以被认为是包含这些可能对象的"包"。
+
+例如，在上文的电影疯狂动物城的例子中--单词("determined","to","prove","herself"...."the","mystery")组成了"包"。我们对所有电影概述列出这样的列表。最后我们用之前操作Y的方式再次进行布尔操作。我们只要简单的使用sckit-learn库提供的CountVectorizer()函数就可以了，因为这种表示法经常用于机器学习。
+
+这意味着，对于我们拥有数据的所有电影，我们将首先计算所有唯一的单词。比如说，有30000个独特的单词。然后我们可以将每个电影概览表示为30000x1向量，其中向量中的每个位置对应于特定单词的存在或不存在。如果概览中存在与该位置对应的词，则该位置将具有1，否则为0。
+
+例如，如果我们的词汇是4个词——"I","am","a","good","boy"，那么句子"I am a boy"的表示形式是[1 1 1 0 1]，而句子"I am good"的表示形式是[1 10 1 1 0 1 0]。
+
+::
+  
+  from sklearn.feature_extraction.text import CountVectorizer
+  import re
+
+  content=[]
+  for i in range(len(movies_with_overviews)):
+      movie=movies_with_overviews[i]
+      id=movie['id']
+      overview=movie['overview']
+      overview=overview.replace(',','')
+      overview=overview.replace('.','')
+      content.append(overview)
+
+  print content[0]
+  print len(content)
+
+A teenager finds himself transported to an island where he must help protect a group of orphans with special powers from creatures intent on destroying them
+1595
+
+是否所有单词都同等重要？
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+当我联想到"动物农场"的时候我认为不是所有的单词都同等重要。
+
+例如，我们看下面黑客帝国中的概述-
+
+::
+  
+  get_movie_info_tmdb('The Matrix')['overview']
+
+u'Set in the 22nd century, The Matrix tells the story of a computer hacker who joins a group of underground insurgents fighting the vast and powerful computers who now rule the earth.'
+
+对于《黑客帝国》来说，像“计算机”这样的词比像“谁”、“强大”或“巨大”这样的词更能说明它是一部科幻电影。计算机科学家过去处理自然语言这一问题的一种方法（现在仍然非常普遍）就是我们称之为TF-IDF的方法，即词频、逆文本频率。这里的基本思想是，强烈说明某个文档内容的单词(在本例中，所有电影概述都是文档)是在该文档中频繁出现的单词，且在其他文档中很少出现。例如，“计算机”在这里出现两次，但在大多数其他电影概览中可能不会出现。因此，这是指示性的。另一方面，像“a”、“and”、“the”这样的泛型词在所有文档中经常出现。因此，它们不是指示性的。
+
+那么，我们能否利用这些方法来将我们高的疯狂的30000维特征向量减少到一个更小、更易处理的大小呢？但是首先，我们为什么要这么做？答案可能是机器学习中最常用的短语之一——"维度的诅咒"。
+
+维度的诅咒
+~~~~~~~~~~~~~~~~~~~
+
+这一章节参考自另一片 机器学习文章_ 。
+
+.. _机器学习文章: https://homes.cs.washington.edu/~pedrod/papers/cacm12.pdf
+
+这个表达式是由Bellman在1961年提出的，它指的是当输入是高维时，许多在低维下工作良好的算法变得难以处理。它们不能在高维度上工作的原因与我们前面讨论的——具有代表性的数据集密切相关。考虑这个，函数f只依赖于一个因变量x，x只能从1到100的整数值。因为它是一维的，所以它可以画在一条线上。为了获得代表性的样本，您需要对诸如-f(1)、f(20)、f(40)、f(60)、f(80)、f(100)之类的东西进行采样。
+
+现在，让我们增加维度，即因变量的数量，看看会发生什么。比如说，我们有2个变量x1和x2，可能和前面的一样，介于1和100之间的整数。现在，不是直线，而是一个平面，两个轴上有x1和x2。有趣的一点是，我们不像以前那样有100个因变量的可能值，我们现在有100000个可能值！基本上，我们可以制作100x100的可能值x1和x2的表格。哇，这个数字成指数增长。不仅用比喻，而且用指数表示。毋庸置疑，为了像以前那样覆盖5%的空间，我们需要对f取5000个值。
+
+对于3个变量，它将是100000000，我们需要在500000点进行采样。这已经超过了我们所遇到的大多数培训问题的数据点数。
+
+基本上，随着示例的维度（特征数量）的增长，因为固定大小的训练集覆盖了输入空间的缩减部分。即使具有中等尺寸的100个和由数万亿个示例组成的庞大的训练集，后者也仅覆盖输入空间的大约10-18的一小部分。这就是机器学习既必要又困难的原因。
+
+所以，是的，如果有些单词不重要，我们想去掉它们，减少X矩阵的维数。我们将采用TF-IDF识别不重要的单词。Python让我们只用一行代码来完成这个任务（这就是为什么你应该花更多的时间阅读数学而不是编码！）
+
+::
+  
+  # The min_df paramter makes sure we exclude words that only occur very rarely
+  # The default also is to exclude any words that occur in every movie description
+  vectorize=CountVectorizer(max_df=0.95, min_df=0.005)
+  X=vectorize.fit_transform(content)
+
+我们排除了太多或太少的文件中出现的所有单词，因为这些单词不太可能具有歧视性。只出现在一个文档中的单词很可能是名称，而出现在几乎所有文档中的单词很可能是停止单词。注意，此处的值没有使用验证集进行调优。它们只是猜测。这是可以的，因为我们没有评估这些参数的性能。在严格的情况下，例如，对于发布，最好也调整它们。
+
+::
+  
+  X.shape
+
+(1595, 1365)
+
+现在，每部电影的概述由一个 1x1365 维的向量表示。
+
+现在，我们到了最后的部分了。我们的数据已经清洗了，假设已经设置好（概述可以预测电影类型），并且特征/输出向量也准备好了。让我们开始训练一些模型吧！
+
+::
+
+  import pickle
+  f4=open('X.pckl','wb')
+  f5=open('Y.pckl','wb')
+  pickle.dump(X,f4)
+  pickle.dump(Y,f5)
+  f6=open('Genredict.pckl','wb')
+  pickle.dump(Genre_ID_to_name,f6)
+  f4.close()
+  f5.close()
+  f6.close()
+
+恭喜，我们的数据已经准备好了！
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+注意：由于我们正在构建自己的数据集，我不想让您把所有的时间都花在等待海报图像下载完成上，所以我正在使用一个非常小的数据集。这就是为什么，对于深度学习部分，我们将看到的结果与传统的机器学习方法相比并不引人注目。如果你想看到真正的力量，你应该多花些时间去抓取10万张图片的顺序，而不是像我这里那样抓取1000张图片。引用我上面提到的论文——MORE DATA BEATS A CLEVERER ALGORITHM。
+
+作为助教，我看到项目中的大多数团队都有10万部电影的订单数据。因此，如果您想发挥这些模型的威力，可以考虑爬取比我更大的数据集。
