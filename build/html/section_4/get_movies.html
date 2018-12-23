@@ -104,6 +104,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#tmdb">基于这个新的数据集，我们现在可以从TMDB抓取海报来作为我们的训练数据了！</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#id5">基于离散信息建立数据集！</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#id6">我的实现</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id7">我们如何在矩阵中存储电影概述？</a></li>
 </ul>
 </li>
 </ul>
@@ -452,6 +453,105 @@ Done with all the posters!</p>
 </div>
 <div class="section" id="id6">
 <h2>我的实现<a class="headerlink" href="#id6" title="永久链接至标题">¶</a></h2>
+<p>实现步骤-</p>
+<blockquote>
+<div><ul class="simple">
+<li>如上所述问题被简化为一个多标签问题</li>
+<li>我们将尝试预测一部电影关联的多种类型，这将作为我们的Y</li>
+<li>我们使用两个不同的类型作为 X – 文本和图片</li>
+<li>对文本部分–被用来预测类型的输入特征使用的是电影情节，可以从TMDB获取的数据中’overview’属性得到。这将作为我们的X</li>
+<li>对图片部分–我们使用爬取的电影海报图片作为我们的X</li>
+</ul>
+</div></blockquote>
+<p>注意：我们将首先看一些传统的机器学习模型，这些模型在最近兴起的神经网络和深度学习之前很流行。对电影海报图像进行类型预测，我之所以避免使用这种方法是因为在不使用深度学习的情况下，传统的机器学习模型不再被用来特征提取（前面都详细讨论过，不要害怕术语）。对于用电影概述来预测电影类型的问题，我们将同时使用传统模型和深度学习模型。</p>
+<p>现在，我们开始建立我们的 X 和 Y ！</p>
+<p>首先，我们筛选出那些有概述的电影。接下来的步骤是用来解释为什么数据清洗很重要的很好的案例！</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">movies_with_overviews</span><span class="o">=</span><span class="p">[]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">no_duplicate_movies</span><span class="p">)):</span>
+    <span class="n">movie</span><span class="o">=</span><span class="n">no_duplicate_movies</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="nb">id</span><span class="o">=</span><span class="n">movie</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
+    <span class="n">overview</span><span class="o">=</span><span class="n">movie</span><span class="p">[</span><span class="s1">&#39;overview&#39;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">overview</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="k">continue</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">movies_with_overviews</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">movie</span><span class="p">)</span>
+
+<span class="nb">len</span><span class="p">(</span><span class="n">movies_with_overviews</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>1595</p>
+<p>现在，我们把这些电影的类型存储在列表中，后面我们会把他们转化为布尔向量。</p>
+<p>布尔向量表示法是机器学习中存储/表示数据的一种常见且重要的方法。本质上，它是将具有n个可能值的分类变量简化为n个布尔变量的一种方法。什么意思呢？比方说，[(1,3),(4)]这个列表表示样本A有两个标签1和3,而样本B有一个标签4。对每个样本来说，对于每个可能的标签，表示法简化为如果它具有该标签那么用1表示，如果没有该标签那么用0表示。上述列表的布尔表示法版本是-</p>
+<p>[(1,0,1,0),(0,0,0,1)]</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="c1"># genres=np.zeros((len(top1000_movies),3))</span>
+<span class="n">genres</span><span class="o">=</span><span class="p">[]</span>
+<span class="n">all_ids</span><span class="o">=</span><span class="p">[]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">movies_with_overviews</span><span class="p">)):</span>
+    <span class="n">movie</span><span class="o">=</span><span class="n">movies_with_overviews</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="nb">id</span><span class="o">=</span><span class="n">movie</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
+    <span class="n">genre_ids</span><span class="o">=</span><span class="n">movie</span><span class="p">[</span><span class="s1">&#39;genre_ids&#39;</span><span class="p">]</span>
+    <span class="n">genres</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">genre_ids</span><span class="p">)</span>
+    <span class="n">all_ids</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">genre_ids</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="k">import</span> <span class="n">MultiLabelBinarizer</span>
+<span class="n">mlb</span><span class="o">=</span><span class="n">MultiLabelBinarizer</span><span class="p">()</span>
+<span class="n">Y</span><span class="o">=</span><span class="n">mlb</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">genres</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">genres</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>[28, 12, 35, 10749]</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="nb">print</span> <span class="n">Y</span><span class="o">.</span><span class="n">shape</span>
+<span class="nb">print</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>(1595, 20)
+[327 234 220 645 222 438 404 138 45 440 233 133 242 196 135 232 256 80 23 25]</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="nb">len</span><span class="p">(</span><span class="n">list_of_genres</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>19</p>
+<p>这很有趣，如果你还记得的话，我们只有19个类型标签。但是得出 Y 的结果是 1666,20 ,而它应该是 1666,19 ，因为我们只有19个种类？我们来看看怎么回事。</p>
+<p>让我们找出那些不属于我们原始类型列表中的类型ID！</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="c1"># Create a tmdb genre object!</span>
+<span class="n">genres</span><span class="o">=</span><span class="n">tmdb</span><span class="o">.</span><span class="n">Genres</span><span class="p">()</span>
+<span class="c1"># the list() method of the Genres() class returns a listing of all genres in the form of a dictionary.</span>
+<span class="n">list_of_genres</span><span class="o">=</span><span class="n">genres</span><span class="o">.</span><span class="n">list</span><span class="p">()[</span><span class="s1">&#39;genres&#39;</span><span class="p">]</span>
+<span class="n">Genre_ID_to_name</span><span class="o">=</span><span class="p">{}</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">list_of_genres</span><span class="p">)):</span>
+    <span class="n">genre_id</span><span class="o">=</span><span class="n">list_of_genres</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
+    <span class="n">genre_name</span><span class="o">=</span><span class="n">list_of_genres</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
+    <span class="n">Genre_ID_to_name</span><span class="p">[</span><span class="n">genre_id</span><span class="p">]</span><span class="o">=</span><span class="n">genre_name</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">all_ids</span><span class="p">):</span>
+  <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">Genre_ID_to_name</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+      <span class="nb">print</span> <span class="n">i</span>
+</pre></div>
+</div>
+<p>10769</p>
+<p>这个类型ID并不是我们查询TMDB获取所有可能的类型得到的。我们现在怎么办？我们不能忽略所有包含此类型的样本。但是如果你向前看你会看到许多这样的样本。所以我google了一下又看了他们的文档发现这个ID对应的类型是’Foreign’。因此我们把它加入到我们自己定义的字典中。像这样的问题在机器学习中很常见，当我们遇到时需要调查并纠正过来。我们总是要决定哪些要保留，如何保存等等。</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">Genre_ID_to_name</span><span class="p">[</span><span class="mi">10769</span><span class="p">]</span><span class="o">=</span><span class="s2">&quot;Foreign&quot;</span> <span class="c1">#Adding it to the dictionary</span>
+<span class="nb">len</span><span class="p">(</span><span class="n">Genre_ID_to_name</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>20</p>
+<p>现在我们来建立 X 矩阵也就是输入特征！之前说过，我们会使用电影概述作为我们的输入向量！我们来看一个例子！</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">sample_movie</span><span class="o">=</span><span class="n">movies_with_overviews</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+<span class="n">sample_overview</span><span class="o">=</span><span class="n">sample_movie</span><span class="p">[</span><span class="s1">&#39;overview&#39;</span><span class="p">]</span>
+<span class="n">sample_title</span><span class="o">=</span><span class="n">sample_movie</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">]</span>
+<span class="nb">print</span> <span class="s2">&quot;The overview for the movie&quot;</span><span class="p">,</span><span class="n">sample_title</span><span class="p">,</span><span class="s2">&quot; is - </span><span class="se">\n\n</span><span class="s2">&quot;</span>
+<span class="nb">print</span> <span class="n">sample_overview</span>
+</pre></div>
+</div>
+<p>The overview for the movie Doctor Strange  is -</p>
+<p>After his career is destroyed, a brilliant but arrogant surgeon gets a new lease on life when a sorcerer takes him under his wing and trains him to defend the world against evil.</p>
+</div>
+<div class="section" id="id7">
+<h2>我们如何在矩阵中存储电影概述？<a class="headerlink" href="#id7" title="永久链接至标题">¶</a></h2>
 </div>
 </div>
 

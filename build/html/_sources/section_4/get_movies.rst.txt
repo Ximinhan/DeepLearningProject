@@ -315,3 +315,129 @@ Done with all the posters!
 
 我的实现
 ~~~~~~~~~~~~~~~~~
+
+实现步骤-
+
+ - 如上所述问题被简化为一个多标签问题
+ - 我们将尝试预测一部电影关联的多种类型，这将作为我们的Y
+ - 我们使用两个不同的类型作为 X -- 文本和图片
+ - 对文本部分--被用来预测类型的输入特征使用的是电影情节，可以从TMDB获取的数据中'overview'属性得到。这将作为我们的X
+ - 对图片部分--我们使用爬取的电影海报图片作为我们的X
+
+注意：我们将首先看一些传统的机器学习模型，这些模型在最近兴起的神经网络和深度学习之前很流行。对电影海报图像进行类型预测，我之所以避免使用这种方法是因为在不使用深度学习的情况下，传统的机器学习模型不再被用来特征提取（前面都详细讨论过，不要害怕术语）。对于用电影概述来预测电影类型的问题，我们将同时使用传统模型和深度学习模型。
+
+现在，我们开始建立我们的 X 和 Y ！
+
+首先，我们筛选出那些有概述的电影。接下来的步骤是用来解释为什么数据清洗很重要的很好的案例！
+
+::
+
+  movies_with_overviews=[]
+  for i in range(len(no_duplicate_movies)):
+      movie=no_duplicate_movies[i]
+      id=movie['id']
+      overview=movie['overview']
+    
+      if len(overview)==0:
+          continue
+      else:
+          movies_with_overviews.append(movie)
+        
+  len(movies_with_overviews)
+
+1595
+
+现在，我们把这些电影的类型存储在列表中，后面我们会把他们转化为布尔向量。
+
+布尔向量表示法是机器学习中存储/表示数据的一种常见且重要的方法。本质上，它是将具有n个可能值的分类变量简化为n个布尔变量的一种方法。什么意思呢？比方说，[(1,3),(4)]这个列表表示样本A有两个标签1和3,而样本B有一个标签4。对每个样本来说，对于每个可能的标签，表示法简化为如果它具有该标签那么用1表示，如果没有该标签那么用0表示。上述列表的布尔表示法版本是-
+
+[(1,0,1,0),(0,0,0,1)]
+
+::
+
+  # genres=np.zeros((len(top1000_movies),3))
+  genres=[]
+  all_ids=[]
+  for i in range(len(movies_with_overviews)):
+      movie=movies_with_overviews[i]
+      id=movie['id']
+      genre_ids=movie['genre_ids']
+      genres.append(genre_ids)
+      all_ids.extend(genre_ids)
+
+::
+  
+  from sklearn.preprocessing import MultiLabelBinarizer
+  mlb=MultiLabelBinarizer()
+  Y=mlb.fit_transform(genres)
+
+::
+
+  genres[1]
+
+[28, 12, 35, 10749]
+
+::
+
+  print Y.shape
+  print np.sum(Y, axis=0)
+
+(1595, 20)
+[327 234 220 645 222 438 404 138 45 440 233 133 242 196 135 232 256 80 23 25]
+
+::
+  
+  len(list_of_genres)
+
+19
+
+这很有趣，如果你还记得的话，我们只有19个类型标签。但是得出 Y 的结果是 1666,20 ,而它应该是 1666,19 ，因为我们只有19个种类？我们来看看怎么回事。
+
+让我们找出那些不属于我们原始类型列表中的类型ID！
+
+::
+
+  # Create a tmdb genre object!
+  genres=tmdb.Genres()
+  # the list() method of the Genres() class returns a listing of all genres in the form of a dictionary.
+  list_of_genres=genres.list()['genres']
+  Genre_ID_to_name={}
+  for i in range(len(list_of_genres)):
+      genre_id=list_of_genres[i]['id']
+      genre_name=list_of_genres[i]['name']
+      Genre_ID_to_name[genre_id]=genre_name
+
+::
+  
+  for i in set(all_ids):
+    if i not in Genre_ID_to_name.keys():
+        print i
+
+10769
+
+这个类型ID并不是我们查询TMDB获取所有可能的类型得到的。我们现在怎么办？我们不能忽略所有包含此类型的样本。但是如果你向前看你会看到许多这样的样本。所以我google了一下又看了他们的文档发现这个ID对应的类型是'Foreign'。因此我们把它加入到我们自己定义的字典中。像这样的问题在机器学习中很常见，当我们遇到时需要调查并纠正过来。我们总是要决定哪些要保留，如何保存等等。
+
+::
+  
+  Genre_ID_to_name[10769]="Foreign" #Adding it to the dictionary
+  len(Genre_ID_to_name.keys())
+
+20
+
+现在我们来建立 X 矩阵也就是输入特征！之前说过，我们会使用电影概述作为我们的输入向量！我们来看一个例子！
+
+::
+ 
+  sample_movie=movies_with_overviews[5]
+  sample_overview=sample_movie['overview']
+  sample_title=sample_movie['title']
+  print "The overview for the movie",sample_title," is - \n\n"
+  print sample_overview
+
+The overview for the movie Doctor Strange  is - 
+
+
+After his career is destroyed, a brilliant but arrogant surgeon gets a new lease on life when a sorcerer takes him under his wing and trains him to defend the world against evil.
+
+我们如何在矩阵中存储电影概述？
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
