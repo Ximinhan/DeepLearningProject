@@ -3,3 +3,4 @@
 .. toctree::
     :maxdepth: 1
     
+    conventional_model
