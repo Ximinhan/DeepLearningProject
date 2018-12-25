@@ -102,6 +102,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#id2">让我们从一些特征管理开始</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">评估矩阵</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../section_6/index.html">第六章</a></li>
@@ -205,8 +206,9 @@
 <p>这样的列表能一直列下去，但是并不是所有的模型都适用于你自定义框架的问题。你应该想想到底哪个模型最适合你。</p>
 <p>对于我们的问题，我将分别从上述两个类别中个选择一个简单的模型作为样例-</p>
 <blockquote>
-<div>1.支持向量机
-2.多项式朴素叶贝斯</div></blockquote>
+<div><p>1.支持向量机</p>
+<p>2.多项式朴素叶贝斯</p>
+</div></blockquote>
 <p>下面是接下来部分的概览：</p>
 <blockquote>
 <div><ul class="simple">
@@ -220,7 +222,338 @@
 <h2>让我们从一些特征管理开始<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
 <p>设计正确的特性取决于两个关键思想。首先，你想解决什么问题？例如，如果你想猜我的音乐喜好，并且你试图训练一个超级棒的模型，同时给出我的身高作为输入特征，你将没有运气。另一方面，给它我的Spotify播放列表那么任何模型都能解决问题。因此，问题的内容扮演了一个角色。</p>
 <p>其次，您只能根据手头的数据来表示。也就是说，如果你没有访问我的Spotify播放列表，但是访问我的Facebook状态——你知道我所有的关于哈佛的状态可能都没有用。但如果你将我Facebook状态中发的Youtube链接作为输入，那么这也可以解决这个问题。因此，手头数据的可用性是第二个因素。</p>
+<p>考虑这个问题的一个好方法是，首先考虑手头的问题，但设计特性受可用数据的限制。如果你有很多独立特征，每个特征都与类相关联，那么学习很容易。另一方面，如果类是一个非常复杂的功能特性，您可能无法学习它。</p>
+<p>在这个问题的背景下，我们想预测一部电影的体裁。我们可以查看的是-电影概述，这是电影情节的文本描述。这个假设是有道理的，概括是对故事的简短描述，故事在给电影分配类型方面显然很重要。</p>
+<p>因此，让我们通过利用电影概述中的单词来改进我们的特征。回到我们前面讨论的一个有趣的方法-TF-IDF。最初我们用它来过滤单词，但是我们也可以将tf-idf值作为“importance”字段的值赋给单词，而不是认为每个单词权值相等。TF-IDF只是试图给单词组中每个单词赋予一个权重。</p>
+<p>同样，它的工作方式是-大多数电影描述都有“The的”这个词。显然，它并没有告诉你任何特别的事情。因此，权重应该与描述单词的电影数量成反比。这是属于IDF的部分。</p>
+<p>另一方面，对于电影《星际穿越》来说，如果概述中单词“Space”出现了5次，而单词“wormhole”出现了2次，那么很可能它更多是讲述关于“Space”而不是“wormhole”。因此单词“space”应该有更高的权重。这是属于TF的部分。</p>
+<p>我们只是使用TF-IDF给单词组中的每个单词分配权重。这很有道理，是吧？:)</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">sklearn.feature_extraction.text</span> <span class="k">import</span> <span class="n">TfidfTransformer</span>
+
+<span class="n">tfidf_transformer</span> <span class="o">=</span> <span class="n">TfidfTransformer</span><span class="p">()</span>
+<span class="n">X_tfidf</span> <span class="o">=</span> <span class="n">tfidf_transformer</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<span class="n">X_tfidf</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
 </div>
+<p>(1595, 1365)</p>
+<p>让我们把我们的 X 矩阵和 Y 矩阵分成训练部分和测试部分。我们在训练部分中训练模型，然后在训练部分中测出性能。你可以把这个类比成你在做习题集和在考试。当然，他们都是（假设是）来自相同的问题范围。在习题集中取得好成绩是一个很好的指标，表明你在考试中会取得好成绩，但实际上，你必须在你声称你了解这个科目之前进行测试。</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">msk</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">X_tfidf</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mf">0.8</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">X_train_tfidf</span><span class="o">=</span><span class="n">X_tfidf</span><span class="p">[</span><span class="n">msk</span><span class="p">]</span>
+<span class="n">X_test_tfidf</span><span class="o">=</span><span class="n">X_tfidf</span><span class="p">[</span><span class="o">~</span><span class="n">msk</span><span class="p">]</span>
+<span class="n">Y_train</span><span class="o">=</span><span class="n">Y</span><span class="p">[</span><span class="n">msk</span><span class="p">]</span>
+<span class="n">Y_test</span><span class="o">=</span><span class="n">Y</span><span class="p">[</span><span class="o">~</span><span class="n">msk</span><span class="p">]</span>
+<span class="n">positions</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">movies_with_overviews</span><span class="p">))</span>
+<span class="c1"># print positions</span>
+<span class="n">test_movies</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">positions</span><span class="p">)[</span><span class="o">~</span><span class="n">msk</span><span class="p">]</span>
+<span class="c1"># test_movies</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">sklearn.multiclass</span> <span class="k">import</span> <span class="n">OneVsRestClassifier</span>
+<span class="kn">from</span> <span class="nn">sklearn.svm</span> <span class="k">import</span> <span class="n">SVC</span>
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="k">import</span> <span class="n">GridSearchCV</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="k">import</span> <span class="n">f1_score</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="k">import</span> <span class="n">make_scorer</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="k">import</span> <span class="n">classification_report</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;kernel&#39;</span><span class="p">:[</span><span class="s1">&#39;linear&#39;</span><span class="p">],</span> <span class="s1">&#39;C&#39;</span><span class="p">:[</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]}</span>
+<span class="n">gridCV</span> <span class="o">=</span> <span class="n">GridSearchCV</span><span class="p">(</span><span class="n">SVC</span><span class="p">(</span><span class="n">class_weight</span><span class="o">=</span><span class="s1">&#39;balanced&#39;</span><span class="p">),</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">scoring</span><span class="o">=</span><span class="n">make_scorer</span><span class="p">(</span><span class="n">f1_score</span><span class="p">,</span> <span class="n">average</span><span class="o">=</span><span class="s1">&#39;micro&#39;</span><span class="p">))</span>
+<span class="n">classif</span> <span class="o">=</span> <span class="n">OneVsRestClassifier</span><span class="p">(</span><span class="n">gridCV</span><span class="p">)</span>
+
+<span class="n">classif</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train_tfidf</span><span class="p">,</span> <span class="n">Y_train</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>OneVsRestClassifier(estimator=GridSearchCV(cv=None, error_score=’raise’,estimator=SVC(C=1.0, cache_size=200, class_weight=’balanced’, coef0=0.0,decision_function_shape=None, degree=3, gamma=’auto’, kernel=’rbf’,max_iter=-1, probability=False, random_state=None, shrinking=True,tol=0.001, verbose=False),…refit=True, return_train_score=True,scoring=make_scorer(f1_score, average=micro), verbose=0),n_jobs=1)</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">predstfidf</span><span class="o">=</span><span class="n">classif</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test_tfidf</span><span class="p">)</span>
+
+<span class="nb">print</span> <span class="n">classification_report</span><span class="p">(</span><span class="n">Y_test</span><span class="p">,</span> <span class="n">predstfidf</span><span class="p">,</span> <span class="n">target_names</span><span class="o">=</span><span class="n">genre_names</span><span class="p">)</span>
+</pre></div>
+</div>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="20%" />
+<col width="13%" />
+<col width="18%" />
+<col width="16%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>class</td>
+<td>precision</td>
+<td>recall</td>
+<td>f1-score</td>
+<td>support</td>
+</tr>
+<tr class="row-even"><td>Adventure</td>
+<td>0.42</td>
+<td>0.57</td>
+<td>0.48</td>
+<td>56</td>
+</tr>
+<tr class="row-odd"><td>Fantasy</td>
+<td>0.46</td>
+<td>0.67</td>
+<td>0.55</td>
+<td>45</td>
+</tr>
+<tr class="row-even"><td>Animation</td>
+<td>0.27</td>
+<td>0.42</td>
+<td>0.33</td>
+<td>31</td>
+</tr>
+<tr class="row-odd"><td>Drama</td>
+<td>0.60</td>
+<td>0.57</td>
+<td>0.58</td>
+<td>132</td>
+</tr>
+<tr class="row-even"><td>Horror</td>
+<td>0.00</td>
+<td>0.00</td>
+<td>0.00</td>
+<td>41</td>
+</tr>
+<tr class="row-odd"><td>Action</td>
+<td>0.49</td>
+<td>0.67</td>
+<td>0.57</td>
+<td>70</td>
+</tr>
+<tr class="row-even"><td>Comedy</td>
+<td>0.40</td>
+<td>0.53</td>
+<td>0.46</td>
+<td>77</td>
+</tr>
+<tr class="row-odd"><td>History</td>
+<td>0.40</td>
+<td>0.37</td>
+<td>0.38</td>
+<td>27</td>
+</tr>
+<tr class="row-even"><td>Western</td>
+<td>0.33</td>
+<td>0.14</td>
+<td>0.20</td>
+<td>7</td>
+</tr>
+<tr class="row-odd"><td>Thriller</td>
+<td>0.26</td>
+<td>1.00</td>
+<td>0.41</td>
+<td>76</td>
+</tr>
+<tr class="row-even"><td>Crime</td>
+<td>0.46</td>
+<td>0.48</td>
+<td>0.47</td>
+<td>46</td>
+</tr>
+<tr class="row-odd"><td>Documentary</td>
+<td>0.61</td>
+<td>0.67</td>
+<td>0.64</td>
+<td>21</td>
+</tr>
+<tr class="row-even"><td>Science Fiction</td>
+<td>0.12</td>
+<td>1.00</td>
+<td>0.22</td>
+<td>36</td>
+</tr>
+<tr class="row-odd"><td>Mystery</td>
+<td>0.23</td>
+<td>0.37</td>
+<td>0.29</td>
+<td>35</td>
+</tr>
+<tr class="row-even"><td>Music</td>
+<td>0.95</td>
+<td>0.59</td>
+<td>0.73</td>
+<td>34</td>
+</tr>
+<tr class="row-odd"><td>Romance</td>
+<td>0.35</td>
+<td>0.50</td>
+<td>0.41</td>
+<td>46</td>
+</tr>
+<tr class="row-even"><td>Family</td>
+<td>0.32</td>
+<td>0.38</td>
+<td>0.35</td>
+<td>42</td>
+</tr>
+<tr class="row-odd"><td>War</td>
+<td>0.27</td>
+<td>0.44</td>
+<td>0.33</td>
+<td>9</td>
+</tr>
+<tr class="row-even"><td>Foreign</td>
+<td>0.00</td>
+<td>0.00</td>
+<td>0.00</td>
+<td>4</td>
+</tr>
+<tr class="row-odd"><td>TV Movie</td>
+<td>0.00</td>
+<td>0.00</td>
+<td>0.00</td>
+<td>5</td>
+</tr>
+<tr class="row-even"><td>avg / total</td>
+<td>0.40</td>
+<td>0.56</td>
+<td>0.44</td>
+<td>840</td>
+</tr>
+</tbody>
+</table>
+<p>正如你所看到的，对于像战争和动画这样的表现较少的电影来说，表演总体上更差，而对于像戏剧这样的类别，表现更好。</p>
+<p>撇开数字不谈，让我们看看我们的模型对测试集中的一小部分电影的预测。</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">genre_list</span><span class="o">=</span><span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">Genre_ID_to_name</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">predictions</span><span class="o">=</span><span class="p">[]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">X_test_tfidf</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+    <span class="n">pred_genres</span><span class="o">=</span><span class="p">[]</span>
+    <span class="n">movie_label_scores</span><span class="o">=</span><span class="n">predstfidf</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="c1">#print movie_label_scores</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">):</span>
+        <span class="c1">#print j</span>
+        <span class="k">if</span> <span class="n">movie_label_scores</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">!=</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">genre</span><span class="o">=</span><span class="n">Genre_ID_to_name</span><span class="p">[</span><span class="n">genre_list</span><span class="p">[</span><span class="n">j</span><span class="p">]]</span>
+            <span class="n">pred_genres</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">genre</span><span class="p">)</span>
+    <span class="n">predictions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pred_genres</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">pickle</span>
+<span class="n">f</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;classifer_svc&#39;</span><span class="p">,</span><span class="s1">&#39;wb&#39;</span><span class="p">)</span>
+<span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">classif</span><span class="p">,</span><span class="n">f</span><span class="p">)</span>
+<span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">X_test_tfidf</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+  <span class="k">if</span> <span class="n">i</span><span class="o">%</span><span class="mi">50</span><span class="o">==</span><span class="mi">0</span> <span class="ow">and</span> <span class="n">i</span><span class="o">!=</span><span class="mi">0</span><span class="p">:</span>
+      <span class="nb">print</span> <span class="s1">&#39;MOVIE: &#39;</span><span class="p">,</span><span class="n">movies_with_overviews</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;title&#39;</span><span class="p">],</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">PREDICTION: &#39;</span><span class="p">,</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">predictions</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>MOVIE:  The Walk        PREDICTION:  Adventure,Fantasy,Animation,Action,Thriller,Science Fiction</p>
+<p>MOVIE:  Cinderella      PREDICTION:  Adventure,Fantasy,Action,Thriller,Science Fiction</p>
+<p>MOVIE:  Liza, the Fox-Fairy     PREDICTION:  Drama,Thriller,Science Fiction,Romance,War</p>
+<p>MOVIE:  The Polar Express       PREDICTION:  Adventure,Action,Thriller,Science Fiction,Family</p>
+<p>MOVIE:  Patema Inverted         PREDICTION:  Thriller,Science Fiction,Music</p>
+<p>让我们看看我们的第二个模型怎么样？朴素叶贝斯模型。</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">sklearn.naive_bayes</span> <span class="k">import</span> <span class="n">MultinomialNB</span>
+<span class="n">classifnb</span> <span class="o">=</span> <span class="n">OneVsRestClassifier</span><span class="p">(</span><span class="n">MultinomialNB</span><span class="p">())</span>
+<span class="n">classifnb</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">msk</span><span class="p">]</span><span class="o">.</span><span class="n">toarray</span><span class="p">(),</span> <span class="n">Y_train</span><span class="p">)</span>
+<span class="n">predsnb</span><span class="o">=</span><span class="n">classifnb</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="o">~</span><span class="n">msk</span><span class="p">]</span><span class="o">.</span><span class="n">toarray</span><span class="p">())</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">pickle</span>
+<span class="n">f2</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;classifer_nb&#39;</span><span class="p">,</span><span class="s1">&#39;wb&#39;</span><span class="p">)</span>
+<span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">classifnb</span><span class="p">,</span><span class="n">f2</span><span class="p">)</span>
+<span class="n">f2</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">predictionsnb</span><span class="o">=</span><span class="p">[]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">X_test_tfidf</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+    <span class="n">pred_genres</span><span class="o">=</span><span class="p">[]</span>
+    <span class="n">movie_label_scores</span><span class="o">=</span><span class="n">predsnb</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">):</span>
+        <span class="c1">#print j</span>
+        <span class="k">if</span> <span class="n">movie_label_scores</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">!=</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">genre</span><span class="o">=</span><span class="n">Genre_ID_to_name</span><span class="p">[</span><span class="n">genre_list</span><span class="p">[</span><span class="n">j</span><span class="p">]]</span>
+            <span class="n">pred_genres</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">genre</span><span class="p">)</span>
+    <span class="n">predictionsnb</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pred_genres</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">X_test_tfidf</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+  <span class="k">if</span> <span class="n">i</span><span class="o">%</span><span class="mi">50</span><span class="o">==</span><span class="mi">0</span> <span class="ow">and</span> <span class="n">i</span><span class="o">!=</span><span class="mi">0</span><span class="p">:</span>
+      <span class="nb">print</span> <span class="s1">&#39;MOVIE: &#39;</span><span class="p">,</span><span class="n">movies_with_overviews</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;title&#39;</span><span class="p">],</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">PREDICTION: &#39;</span><span class="p">,</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">predictionsnb</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>MOVIE:  The Walk        PREDICTION:  Adventure,Fantasy,Animation,Science Fiction</p>
+<p>MOVIE:  Cinderella      PREDICTION:  Adventure,Action,Science Fiction</p>
+<p>MOVIE:  Liza, the Fox-Fairy     PREDICTION:  Drama,Romance</p>
+<p>MOVIE:  The Polar Express       PREDICTION:  Science Fiction</p>
+<p>MOVIE:  Patema Inverted         PREDICTION:  Documentary,Music</p>
+<p>正如上面所看到的，结果看起来很有希望，但是我们如何真正比较这两个模型呢？我们需要量化我们的表现，以便我们可以说哪一个更好。让我们回到我们刚开始讨论的内容.——我们正在学习一个函数g，它可以近似原始未知函数f。对于XI的一些值，预测肯定是错误的，我们想要最小化它。</p>
+<p>对于多标签系统，我们经常使用“精准度”和“召回率”来评估性能。这些是标准度量，如果您对这些术语不熟悉，可以通过google阅读更多关于它们的信息。</p>
+</div>
+</div>
+<div class="section" id="id3">
+<h1>评估矩阵<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h1>
+<p>我们将使用标准的 精准度-召回率 矩阵来评估我们的系统。</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="k">def</span> <span class="nf">precision_recall</span><span class="p">(</span><span class="n">gt</span><span class="p">,</span><span class="n">preds</span><span class="p">):</span>
+  <span class="n">TP</span><span class="o">=</span><span class="mi">0</span>
+  <span class="n">FP</span><span class="o">=</span><span class="mi">0</span>
+  <span class="n">FN</span><span class="o">=</span><span class="mi">0</span>
+  <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">gt</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">preds</span><span class="p">:</span>
+          <span class="n">TP</span><span class="o">+=</span><span class="mi">1</span>
+      <span class="k">else</span><span class="p">:</span>
+          <span class="n">FN</span><span class="o">+=</span><span class="mi">1</span>
+  <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">preds</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">p</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">gt</span><span class="p">:</span>
+          <span class="n">FP</span><span class="o">+=</span><span class="mi">1</span>
+  <span class="k">if</span> <span class="n">TP</span><span class="o">+</span><span class="n">FP</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+      <span class="n">precision</span><span class="o">=</span><span class="mi">0</span>
+  <span class="k">else</span><span class="p">:</span>
+      <span class="n">precision</span><span class="o">=</span><span class="n">TP</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">TP</span><span class="o">+</span><span class="n">FP</span><span class="p">)</span>
+  <span class="k">if</span> <span class="n">TP</span><span class="o">+</span><span class="n">FN</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+      <span class="n">recall</span><span class="o">=</span><span class="mi">0</span>
+  <span class="k">else</span><span class="p">:</span>
+      <span class="n">recall</span><span class="o">=</span><span class="n">TP</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">TP</span><span class="o">+</span><span class="n">FN</span><span class="p">)</span>
+  <span class="k">return</span> <span class="n">precision</span><span class="p">,</span><span class="n">recall</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">precs</span><span class="o">=</span><span class="p">[]</span>
+<span class="n">recs</span><span class="o">=</span><span class="p">[]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">test_movies</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="n">i</span><span class="o">%</span><span class="mi">1</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="n">pos</span><span class="o">=</span><span class="n">test_movies</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">test_movie</span><span class="o">=</span><span class="n">movies_with_overviews</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span>
+        <span class="n">gtids</span><span class="o">=</span><span class="n">test_movie</span><span class="p">[</span><span class="s1">&#39;genre_ids&#39;</span><span class="p">]</span>
+        <span class="n">gt</span><span class="o">=</span><span class="p">[]</span>
+        <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gtids</span><span class="p">:</span>
+            <span class="n">g_name</span><span class="o">=</span><span class="n">Genre_ID_to_name</span><span class="p">[</span><span class="n">g</span><span class="p">]</span>
+            <span class="n">gt</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">g_name</span><span class="p">)</span>
+          <span class="c1">#print predictions[i],movies_with_overviews[i][&#39;title&#39;],gt</span>
+        <span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="o">=</span><span class="n">precision_recall</span><span class="p">(</span><span class="n">gt</span><span class="p">,</span><span class="n">predictions</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">precs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+        <span class="n">recs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+<span class="nb">print</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">precs</span><span class="p">)),</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">recs</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>0.33085149314 0.570960451977</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">precs</span><span class="o">=</span><span class="p">[]</span>
+<span class="n">recs</span><span class="o">=</span><span class="p">[]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">test_movies</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="n">i</span><span class="o">%</span><span class="mi">1</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="n">pos</span><span class="o">=</span><span class="n">test_movies</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">test_movie</span><span class="o">=</span><span class="n">movies_with_overviews</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span>
+        <span class="n">gtids</span><span class="o">=</span><span class="n">test_movie</span><span class="p">[</span><span class="s1">&#39;genre_ids&#39;</span><span class="p">]</span>
+        <span class="n">gt</span><span class="o">=</span><span class="p">[]</span>
+        <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gtids</span><span class="p">:</span>
+            <span class="n">g_name</span><span class="o">=</span><span class="n">Genre_ID_to_name</span><span class="p">[</span><span class="n">g</span><span class="p">]</span>
+            <span class="n">gt</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">g_name</span><span class="p">)</span>
+          <span class="c1">#print predictions[i],movies_with_overviews[i][&#39;title&#39;],gt</span>
+        <span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="o">=</span><span class="n">precision_recall</span><span class="p">(</span><span class="n">gt</span><span class="p">,</span><span class="n">predictionsnb</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">precs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+        <span class="n">recs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+<span class="nb">print</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">precs</span><span class="p">)),</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">recs</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>0.48893866021 0.549604519774</p>
+<p>我们样本的平均精准度和召回率评分相当不错！模型似乎起作用了！另外，我们可以看到朴素叶贝斯的性能优于支持向量机。我强烈建议你阅读一下Multinomial叶贝斯，思考一下它为和非常适用于“文档分类”问题，这与我们的问题十分相似，因为每部电影的概览都可以被看成是需要我们分配标签的文档。</p>
 </div>
 
 
