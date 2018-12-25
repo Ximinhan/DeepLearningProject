@@ -100,9 +100,9 @@
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">第五章</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">利用数据构建非深度的传统机器学习模型</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id2">让我们从一些特征管理开始</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">评估矩阵</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id3">评估矩阵</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../section_6/index.html">第六章</a></li>
@@ -486,9 +486,8 @@
 <p>正如上面所看到的，结果看起来很有希望，但是我们如何真正比较这两个模型呢？我们需要量化我们的表现，以便我们可以说哪一个更好。让我们回到我们刚开始讨论的内容.——我们正在学习一个函数g，它可以近似原始未知函数f。对于XI的一些值，预测肯定是错误的，我们想要最小化它。</p>
 <p>对于多标签系统，我们经常使用“精准度”和“召回率”来评估性能。这些是标准度量，如果您对这些术语不熟悉，可以通过google阅读更多关于它们的信息。</p>
 </div>
-</div>
 <div class="section" id="id3">
-<h1>评估矩阵<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h1>
+<h2>评估矩阵<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
 <p>我们将使用标准的 精准度-召回率 矩阵来评估我们的系统。</p>
 <div class="highlight-default"><div class="highlight"><pre><span class="k">def</span> <span class="nf">precision_recall</span><span class="p">(</span><span class="n">gt</span><span class="p">,</span><span class="n">preds</span><span class="p">):</span>
   <span class="n">TP</span><span class="o">=</span><span class="mi">0</span>
@@ -554,6 +553,7 @@
 </div>
 <p>0.48893866021 0.549604519774</p>
 <p>我们样本的平均精准度和召回率评分相当不错！模型似乎起作用了！另外，我们可以看到朴素叶贝斯的性能优于支持向量机。我强烈建议你阅读一下Multinomial叶贝斯，思考一下它为和非常适用于“文档分类”问题，这与我们的问题十分相似，因为每部电影的概览都可以被看成是需要我们分配标签的文档。</p>
+</div>
 </div>
 
 
