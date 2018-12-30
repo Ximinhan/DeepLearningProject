@@ -100,7 +100,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../section_5/index.html">第五章</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../section_6/index.html">第六章</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">第七章</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">用深度学习利用电影海报预测电影类型</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">用深度学习利用电影海报预测电影类型</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id3">利用深度学习从海报中提取视觉特征</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#vgg">使用VGG特征训练一个简单神经网络模型</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../section_8/index.html">第八章</a></li>
@@ -177,7 +181,157 @@
 <p>引用——“在实践中，很少有人从头开始训练整个卷积神经网络(使用随机初始化),因为很少情况下能够拥有足够大的数据集。相反，在一个非常大的数据集(例如，ImageNet上包含了120万张具有1000个类别的图像)预训练卷积网络是很常见的，然后这个卷积网络作为目标任务的初始化或者固定特征提取工具。”</p>
 <p>有三种广泛的方法可以完成迁移学习或者预训练。(这两个概念是不同的，为了清楚的理解这两个概念之间的区别，我建议你仔细阅读相关的教程)。我们将要做的是使用一个预训练过的、发布过的卷积网络作为特征提取工具。从ImageNet(一个非常流行的对象检测数据集)上获取一个预训练过的卷积网络模型，然后移除最后一个全连接层。去掉最后一层后，我们得到的是另一个神经网络即一堆空间转换。但是，原来这个栈的输出可以输入到一个单独的层中，这个层可以对图片分类比如汽车、狗、猫等等。</p>
 <p>这就意味着，在这个空间层中，神经网络将所有图片中包含“狗”的图片聚集在一起，所有包含“猫”的图片聚集在一起。因此，这是一个很有用的层，它使得具有相似对象的图片逻辑距离更相近。</p>
-<p>设想一下，如果我们将我们的电影海报输入到这个栈中，它会将它们嵌入到这样一个空间中，其中具有相似对象的海报逻辑距离更相近。这是一种非常有意义的特征工程方法！</p>
+<p>设想一下，如果我们将我们的电影海报输入到这个栈中，它会将它们嵌入到这样一个空间中，其中具有相似对象的海报逻辑距离更相近。这是一种非常有意义的特征工程方法！尽管也许这并不是类型预测的理想方法，但这确实很有意义。比方说，那些电影海报中有枪或者汽车的很有可能是动作电影。而那些包含微笑着的夫妇的很有可能是浪漫题材或者戏剧题材。另一种选择是从头开始训练卷积神经网络，这是相当密集的计算并且涉及许多技巧使神经网络的训练收敛到最佳的空间转换。</p>
+<p>这样，我们就可以从一些强大的地方开始，然后再建立上层。我们将我们的图片输入到预训练过的网络中来从这些海报中提取视觉特征。然后，用这些特征作为图像的描述，类型作为标签，我们从头创建一个可以在此数据集上学习简单分类的简单的神经网络。这两个步骤正是我们为了预测海报类型要做的。</p>
+<div class="section" id="id3">
+<h2>利用深度学习从海报中提取视觉特征<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
+<p>我们要解决的基本问题是我们能否从电影海报预测电影类型。先要确定-这个假设是否有意义。答案是有意义的。因为这正是海报设计者的工作。他们给海报标语留下视觉线索。他们确保当我们看到一个恐怖电影的海报时我们可以知道这不是一个欢乐的画面。像这样的事情我们能否用深度学习系统推断出这样的微妙之处么？让我们看看！</p>
+<p>对于视觉特征，要么我们可以从头开始训练一个深层神经网络，要么我们可以使用牛津大学视觉几何学组提供给我们的一个预先训练的神经网络，这是最流行的方法之一。这就是所谓的VGG网络。或者正如他们所说，我们将提取图像的VGG特性。在数学上，如前所述，它只是一个层形式的空间变换。所以，我们只需要在图像上执行这一系列的转换，对吧？Keras是一个库可以很容易让我们做到这一点。还有一些其他的库如Tensorflow和PyTorch。尽管后两者功能很强大也可定制并且在实践中用的更多，但Keras通过保持简单的语法使得更容易实现原型。</p>
+<p>我们将使用Keras使得代码简单化，这样我们可以花费更多时间理解和更少的时间编码。对于这一步人们有许多常见做法——“获取图像的VGG特征”或是“通过VGG反向传播图片并移除最后一层”。在Keras中，简单的使用4行代码就够了。</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="c1"># Loading the list of movies we had downloaded posters for eariler -</span>
+<span class="n">f</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;poster_movies.pckl&#39;</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+<span class="n">poster_movies</span><span class="o">=</span><span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">keras.applications.vgg16</span> <span class="k">import</span> <span class="n">VGG16</span>
+<span class="kn">from</span> <span class="nn">keras.preprocessing</span> <span class="k">import</span> <span class="n">image</span>
+<span class="kn">from</span> <span class="nn">keras.applications.vgg16</span> <span class="k">import</span> <span class="n">preprocess_input</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">VGG16</span><span class="p">(</span><span class="n">weights</span><span class="o">=</span><span class="s1">&#39;imagenet&#39;</span><span class="p">,</span> <span class="n">include_top</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">allnames</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">poster_folder</span><span class="p">)</span>
+<span class="n">imnames</span><span class="o">=</span><span class="p">[</span><span class="n">j</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">allnames</span> <span class="k">if</span> <span class="n">j</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.jpg&#39;</span><span class="p">)]</span>
+<span class="n">feature_list</span><span class="o">=</span><span class="p">[]</span>
+<span class="n">genre_list</span><span class="o">=</span><span class="p">[]</span>
+<span class="n">file_order</span><span class="o">=</span><span class="p">[]</span>
+<span class="nb">print</span> <span class="s2">&quot;Starting extracting VGG features for scraped images. This will take time, Please be patient...&quot;</span>
+<span class="nb">print</span> <span class="s2">&quot;Total images = &quot;</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">imnames</span><span class="p">)</span>
+<span class="n">failed_files</span><span class="o">=</span><span class="p">[]</span>
+<span class="n">succesful_files</span><span class="o">=</span><span class="p">[]</span>
+<span class="n">i</span><span class="o">=</span><span class="mi">0</span>
+<span class="k">for</span> <span class="n">mov</span> <span class="ow">in</span> <span class="n">poster_movies</span><span class="p">:</span>
+    <span class="n">i</span><span class="o">+=</span><span class="mi">1</span>
+    <span class="n">mov_name</span><span class="o">=</span><span class="n">mov</span><span class="p">[</span><span class="s1">&#39;original_title&#39;</span><span class="p">]</span>
+    <span class="n">mov_name1</span><span class="o">=</span><span class="n">mov_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">,</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+    <span class="n">poster_name</span><span class="o">=</span><span class="n">mov_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="s1">&#39;_&#39;</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;.jpg&#39;</span>
+    <span class="k">if</span> <span class="n">poster_name</span> <span class="ow">in</span> <span class="n">imnames</span><span class="p">:</span>
+        <span class="n">img_path</span><span class="o">=</span><span class="n">poster_folder</span><span class="o">+</span><span class="n">poster_name</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">load_img</span><span class="p">(</span><span class="n">img_path</span><span class="p">,</span> <span class="n">target_size</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">))</span>
+            <span class="n">succesful_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">imname</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">img_to_array</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">preprocess_input</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">features</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">file_order</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">img_path</span><span class="p">)</span>
+            <span class="n">feature_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
+            <span class="n">genre_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mov</span><span class="p">[</span><span class="s1">&#39;genre_ids&#39;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">feature_list</span><span class="p">))</span><span class="o">==</span><span class="mf">0.0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;problematic&#39;</span><span class="p">,</span><span class="n">i</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">i</span><span class="o">%</span><span class="mi">250</span><span class="o">==</span><span class="mi">0</span> <span class="ow">or</span> <span class="n">i</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+                <span class="nb">print</span> <span class="s2">&quot;Working on Image : &quot;</span><span class="p">,</span><span class="n">i</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">failed_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">imname</span><span class="p">)</span>
+            <span class="k">continue</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">continue</span>
+<span class="nb">print</span> <span class="s2">&quot;Done with all features, please pickle for future use!&quot;</span>
+</pre></div>
+</div>
+<p>Starting extracting VGG features for scraped images. This will take time, Please be patient…</p>
+<p>Total images =  1347</p>
+<p>Working on Image :  250</p>
+<p>Working on Image :  500</p>
+<p>Working on Image :  750</p>
+<p>Working on Image :  1000</p>
+<p>Working on Image :  1250</p>
+<p>Working on Image :  1500</p>
+<p>Done with all features, please pickle for future use!</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="nb">len</span><span class="p">(</span><span class="n">genre_list</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>1317</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="nb">len</span><span class="p">(</span><span class="n">feature_list</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>1317</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="c1"># Reading from pickle below, this code is not to be run.</span>
+<span class="n">list_pickled</span><span class="o">=</span><span class="p">(</span><span class="n">feature_list</span><span class="p">,</span><span class="n">file_order</span><span class="p">,</span><span class="n">failed_files</span><span class="p">,</span><span class="n">succesful_files</span><span class="p">,</span><span class="n">genre_list</span><span class="p">)</span>
+<span class="n">f</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;posters_new_features.pckl&#39;</span><span class="p">,</span><span class="s1">&#39;wb&#39;</span><span class="p">)</span>
+<span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">list_pickled</span><span class="p">,</span><span class="n">f</span><span class="p">)</span>
+<span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Features dumped to pickle file&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Features dumped to pickle file</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">f7</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;posters_new_features.pckl&#39;</span><span class="p">,</span><span class="s1">&#39;rb&#39;</span><span class="p">)</span>
+<span class="n">list_pickled</span><span class="o">=</span><span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f7</span><span class="p">)</span>
+<span class="n">f7</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="c1"># (feature_list2,file_order2)=list_pickled</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="vgg">
+<h2>使用VGG特征训练一个简单神经网络模型<a class="headerlink" href="#vgg" title="永久链接至标题">¶</a></h2>
+<div class="highlight-default"><div class="highlight"><pre><span class="p">(</span><span class="n">feature_list</span><span class="p">,</span><span class="n">files</span><span class="p">,</span><span class="n">failed</span><span class="p">,</span><span class="n">succesful</span><span class="p">,</span><span class="n">genre_list</span><span class="p">)</span><span class="o">=</span><span class="n">list_pickled</span>
+</pre></div>
+</div>
+<p>让我们首先获取我们1342个样本的标签！由于一些实例下载图片失败，使用正确模型的最佳方法是读取下载的海报的名称，然后从那里开始。这些海报无法上传到Github上因为他们太大了，因此他们将被下载下来然后从我电脑本地读取。如果你确定要重做，你可能要检查和修改代码中的路径以确保可以正确运行。</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">c</span><span class="p">,</span><span class="n">d</span><span class="p">)</span><span class="o">=</span><span class="n">feature_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+<span class="n">feature_size</span><span class="o">=</span><span class="n">a</span><span class="o">*</span><span class="n">b</span><span class="o">*</span><span class="n">c</span><span class="o">*</span><span class="n">d</span>
+</pre></div>
+</div>
+<p>这看起来很奇怪，为什么要再次执行上面执行过的循环？原因很简单，关于numpy最重要的是使用vstack()和hstack()是高度次优的。当Numpy数组创建后会在内从中分配一个固定的大小，当我们进行stack操作时会在一个新的位置复制并创建一个新的数组。这使得代码执行非常非常慢。解决这个问题最好的方法(如果你使用的是MATLAB矩阵也存在这个问题)是创建一个零组成的numpy数组然后逐行重写它。上面的代码只是用来看看我们需要多大的numpy数组！</p>
+<p>最终的电影海报数据集，我们所需要的所有信息，是1265部电影。在上面的代码中，我们制作了一个X numpy数组，其中包含每行一个图像的视觉特性。因此，将vgg特征整形为形状(1,25088)，最后得到形状矩阵(1265,25088)。</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">np_features</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">feature_list</span><span class="p">),</span><span class="n">feature_size</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">feature_list</span><span class="p">)):</span>
+    <span class="n">feat</span><span class="o">=</span><span class="n">feature_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="n">reshaped_feat</span><span class="o">=</span><span class="n">feat</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">np_features</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">reshaped_feat</span>
+
+<span class="n">X</span><span class="o">=</span><span class="n">np_features</span>
+
+<span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="k">import</span> <span class="n">MultiLabelBinarizer</span>
+<span class="n">mlb</span><span class="o">=</span><span class="n">MultiLabelBinarizer</span><span class="p">()</span>
+<span class="n">Y</span><span class="o">=</span><span class="n">mlb</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">genre_list</span><span class="p">)</span>
+
+<span class="n">Y</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+</div>
+<p>(1317, 20)</p>
+<p>我们布尔型的的Y numpy数组包含与1277部电影的流派ID相对应的布尔型标签。</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">visual_problem_data</span><span class="o">=</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">)</span>
+<span class="n">f8</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;visual_problem_data_clean.pckl&#39;</span><span class="p">,</span><span class="s1">&#39;wb&#39;</span><span class="p">)</span>
+<span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">visual_problem_data</span><span class="p">,</span><span class="n">f8</span><span class="p">)</span>
+<span class="n">f8</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<span class="n">f8</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;visual_problem_data_clean.pckl&#39;</span><span class="p">,</span><span class="s1">&#39;rb&#39;</span><span class="p">)</span>
+<span class="n">visual_features</span><span class="o">=</span><span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f8</span><span class="p">)</span>
+<span class="n">f8</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">)</span><span class="o">=</span><span class="n">visual_features</span>
+
+<span class="n">X</span><span class="o">.</span><span class="n">shape</span>
+
+<span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mf">0.8</span>
+
+<span class="n">X_train</span><span class="o">=</span><span class="n">X</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+<span class="n">X_test</span><span class="o">=</span><span class="n">X</span><span class="p">[</span><span class="o">~</span><span class="n">mask</span><span class="p">]</span>
+<span class="n">Y_train</span><span class="o">=</span><span class="n">Y</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+<span class="n">Y_test</span><span class="o">=</span><span class="n">Y</span><span class="p">[</span><span class="o">~</span><span class="n">mask</span><span class="p">]</span>
+
+<span class="n">X_test</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+</div>
+<p>(264, 25088)</p>
+<p>现在，我们创建了自己的keras神经网络来使用vgg特性，然后对电影类型进行分类。Keras让这变得非常容易。</p>
+<p>多年来，神经网络结构变得越来越复杂。但是最简单的计算包含了非常标准的分层计算，如上所述。考虑到其中一些操作的流行性，Keras可以很容易地按顺序写出这些操作的名称。这样你就可以在完全避免数学的同时建立一个网络（强烈建议在数学上花更多的时间）</p>
+<p>sequential（）允许我们使模型遵循这个层的顺序。可以使用不同类型的层，如致密层、conv2d层等，还可以使用许多激活功能，如relu、linear等。</p>
+</div>
 </div>
 
 
