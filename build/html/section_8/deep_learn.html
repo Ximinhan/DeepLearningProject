@@ -1,0 +1,286 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>利用深度学习获得文本特征 &mdash; DeepLearning 1.0 文档</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="索引"
+              href="../genindex.html"/>
+        <link rel="search" title="搜索" href="../search.html"/>
+    <link rel="top" title="DeepLearning 1.0 文档" href="../index.html"/>
+        <link rel="up" title="第八章" href="index.html"/>
+        <link rel="next" title="第九章" href="../section_9/index.html"/>
+        <link rel="prev" title="第八章" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> DeepLearning
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">目录:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../section_1/index.html">第一章</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../section_2/index.html">第二章</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../section_3/index.html">第三章</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../section_4/index.html">第四章</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../section_5/index.html">第五章</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../section_6/index.html">第六章</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../section_7/index.html">第七章</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">第八章</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">利用深度学习获得文本特征</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../section_9/index.html">第九章</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">DeepLearning</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">第八章</a> &raquo;</li>
+        
+      <li>利用深度学习获得文本特征</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/section_8/deep_learn.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="id1">
+<h1>利用深度学习获得文本特征<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h1>
+<p>让我们试着对文本做同样的事？</p>
+<p>我们将使用现成的文字表达式模型-Word2Vec模型。就像之前的VGGnet一样，这个模型可以获得有意义的表达式。由于单词总数很小，我们甚至不需要通过网络来传递我们的样本。即使这样我们也做了，并且将结果以字典的形式保存。我们可以简单的通过查询字典获取单词的Word2Vec特征。</p>
+<p>你可以在这下载字典-<a class="reference external" href="https://drive.google.com/file/d/0B7XkCwpI5KDYNlNUTTlSS21pQmM/edit">https://drive.google.com/file/d/0B7XkCwpI5KDYNlNUTTlSS21pQmM/edit</a></p>
+<p>下载字典到当前同级目录下。</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">gensim</span> <span class="k">import</span> <span class="n">models</span>
+<span class="c1"># model2 = models.Word2Vec.load_word2vec_format(&#39;GoogleNews-vectors-negative300.bin&#39;, binary=True)</span>
+<span class="n">model2</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">KeyedVectors</span><span class="o">.</span><span class="n">load_word2vec_format</span><span class="p">(</span><span class="s1">&#39;GoogleNews-vectors-negative300.bin&#39;</span><span class="p">,</span> <span class="n">binary</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>现在我们只需要简单的从上面的模型中查找单词就行了。比方说，我们要获取单词“King”的Word2Vec特征值只需要查找-model2[‘king’]</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="nb">print</span> <span class="n">model2</span><span class="p">[</span><span class="s1">&#39;king&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+<span class="nb">print</span> <span class="n">model2</span><span class="p">[</span><span class="s1">&#39;dog&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+
+<span class="p">(</span><span class="mi">300</span><span class="p">,)</span>
+<span class="p">(</span><span class="mi">300</span><span class="p">,)</span>
+</pre></div>
+</div>
+<p>这样一来，我们就能用这个word2vec模型代表我们概述中的单词了。然后我们可以以此作为我们的X参数。因此，我们使用的是基于单词语义表示的表示，而不是字数。从数学上讲，每个单词可以从3-4维（长度）到300维！</p>
+<p>对于上面的电影数据集，我们试试通过概述内容预测一下类型！</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="nb">len</span><span class="p">(</span><span class="n">final_movies_set</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>1265</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">nltk.tokenize</span> <span class="k">import</span> <span class="n">RegexpTokenizer</span>
+<span class="kn">from</span> <span class="nn">stop_words</span> <span class="k">import</span> <span class="n">get_stop_words</span>
+<span class="n">tokenizer</span> <span class="o">=</span> <span class="n">RegexpTokenizer</span><span class="p">(</span><span class="s1">r&#39;\w+&#39;</span><span class="p">)</span>
+
+<span class="c1"># create English stop words list</span>
+<span class="n">en_stop</span> <span class="o">=</span> <span class="n">get_stop_words</span><span class="p">(</span><span class="s1">&#39;en&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">movie_mean_wordvec</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">final_movies_set</span><span class="p">),</span><span class="mi">300</span><span class="p">))</span>
+<span class="n">movie_mean_wordvec</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+</div>
+<p>(1265,300)</p>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../section_9/index.html" class="btn btn-neutral float-right" title="第九章" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="第八章" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; 版权所有 2018, tiberius.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="../_static/translations.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
