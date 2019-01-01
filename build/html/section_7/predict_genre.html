@@ -104,6 +104,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#id3">利用深度学习从海报中提取视觉特征</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#vgg">使用VGG特征训练一个简单神经网络模型</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#id4">重要的问题：为什么我们需要激活函数？</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">让我们利用通过VGG网络提取的特征训练我们的模型</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id6">让我们看看我们的预测？</a></li>
 </ul>
 </li>
 </ul>
@@ -339,7 +341,129 @@
 <p>“有时候我们往往会迷失在术语中且容易混淆一些事，所以最好的办法是回到我们的基础上来。</p>
 <p>别忘了机器学习（也是深度学习）的最初前提是什么——如果输入和输出由函数y=f(x)相关，那么如果我们已知x，没法确切的知道函数f除非我们知道过程本身。然而机器学习使你能够用函数g近似得到f，而尝试多个候选函数来识别函数g的最佳近似f的过程称为机器学习。</p>
 <p>好吧，这就是机器学习，深度学习有什么不同？深度学习只是试图扩展使用上述机器学习范式可以近似的可能类型的数量。大致来说，如果之前的模型可以学习一万种方法，那么现在可以学习十万种方法（实际上二者的空间都是无限的，但是一个比另一个大，因为数学这样说很酷）</p>
-<p>如果你想知道他的数学原理，去阅读一下VC维以及网络中更多的层是如何影响它的。</p>
+<p>如果你想知道他的数学原理，去阅读一下VC维以及网络中更多的层是如何影响它的。但我这里不会说太多理论的东西，当我说不是所有数据都可以通过线性函数正确的分类的时候我会让你通过直觉相信我。因此我们的深度学习模型要能够近似更加复杂的函数而不仅仅是线性函数。</p>
+<p>现在，让我们来看看非线性的情况。假设一个线性函数 y=2x+3 和另一个 y=4x+7。如果我把他们放到一起取平均值会怎么样？我会得到另一个线性函数 y=3x+5 。因此我不需要分别进行这两个计算，然后求出平均值，我只需要使用一个线性函数y=3x+5就行了。显然，这样的逻辑在我们拥有两个以上的函数的时候是很好的。这正是当你没有非线性节点时发生的情况，也是其他答案所写的那样。</p>
+<p>它简单的遵循线性函数的定义-</p>
+<p>(i)如果有两个线性函数</p>
+<p>(ii)使用他们组合出的线性函数（即我们如何组合网络中多个节点的输出）</p>
+<p>你一定可以得到这样的线性函数，因为 f(x)+g(x)=mx+b+nx+c=(n+m)x+(b+c)=h(x)</p>
+<p>本质上你可以用一个简单的矩阵变换来代替你的整个网络，这个矩阵变换可以解释所有的线性组合并且可以向上/向下采样。</p>
+<p>简而言之，你只能通过输入和输出学习得到一个原始函数f的线性近似。正如之前说的，它并不总是最佳的近似结果。添加非线性可以通过将每个非线性函数近似为大量非线性函数的线性组合来确保您可以学习更复杂的函数。</p>
+<p>我也是新手，所以有什么问题可以在下方评论！希望对你有用”</p>
+</div>
+<div class="section" id="id5">
+<h2>让我们利用通过VGG网络提取的特征训练我们的模型<a class="headerlink" href="#id5" title="永久链接至标题">¶</a></h2>
+<p>我们将用到的模型只有一个位于VGG特征和最终输出层之间的隐含层。这是你能得到的最简单的神经网络了。任何以尺寸(1,25088)输入网络的图片，第一层的输出是一个1024维向量。这个隐含层输出经过了逐点的RELU激活。这个输出被转化成一个20维的向量输入到输出层。它使用了sigmod函数。</p>
+<p>这个sigmod函数，也通常称为squashing函数，是一个将数字转换成到0到1之间的数字的函数。当你想到数字位于0和1之间的时候，你会想到什么？对了，概率。</p>
+<p>通过将20个输出标签的得分压缩到0到1之间，sigmoid让我们将它们的得分解释为概率。然后，我们可以选择概率得分最高的3或5个类型作为电影海报的预测流派！多么简单！</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">keras.models</span> <span class="k">import</span> <span class="n">Sequential</span>
+<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="k">import</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">Activation</span>
+<span class="kn">from</span> <span class="nn">keras</span> <span class="k">import</span> <span class="n">optimizers</span>
+<span class="n">model_visual</span> <span class="o">=</span> <span class="n">Sequential</span><span class="p">([</span>
+    <span class="n">Dense</span><span class="p">(</span><span class="mi">1024</span><span class="p">,</span> <span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">25088</span><span class="p">,)),</span>
+    <span class="n">Activation</span><span class="p">(</span><span class="s1">&#39;relu&#39;</span><span class="p">),</span>
+    <span class="n">Dense</span><span class="p">(</span><span class="mi">256</span><span class="p">),</span>
+    <span class="n">Activation</span><span class="p">(</span><span class="s1">&#39;relu&#39;</span><span class="p">),</span>
+    <span class="n">Dense</span><span class="p">(</span><span class="mi">20</span><span class="p">),</span>
+    <span class="n">Activation</span><span class="p">(</span><span class="s1">&#39;sigmoid&#39;</span><span class="p">),</span>
+<span class="p">])</span>
+<span class="n">opt</span> <span class="o">=</span> <span class="n">optimizers</span><span class="o">.</span><span class="n">rmsprop</span><span class="p">(</span><span class="n">lr</span><span class="o">=</span><span class="mf">0.0001</span><span class="p">,</span> <span class="n">decay</span><span class="o">=</span><span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">6</span><span class="p">)</span>
+
+<span class="c1">#sgd = optimizers.SGD(lr=0.05, decay=1e-6, momentum=0.4, nesterov=False)</span>
+<span class="n">model_visual</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">optimizer</span><span class="o">=</span><span class="n">opt</span><span class="p">,</span>
+              <span class="n">loss</span><span class="o">=</span><span class="s1">&#39;binary_crossentropy&#39;</span><span class="p">,</span>
+              <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;accuracy&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>我们使用fit()函数训练模型。它使用的参数有-训练特征和训练标签，epochs, batch_size 和 verbose。</p>
+<p>最简单的一个是-verbose。0=“执行时不打印输出”，1=“执行时打印出处”。</p>
+<p>通常数据集太大以至于无法加载到RAM中。所以我们分批加载数据。对于 batch_size=32且epochs=10的时候，模型开始按每次32行从X中加载数据并会计算损失和更新模型。它会已知运行直到覆盖所有样本10次。</p>
+<p>因此，更新模型的次数=(总样本数/批量大小)*(Epochs)</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">model_visual</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">Epoch</span> <span class="mi">1</span><span class="o">/</span><span class="mi">10</span>
+<span class="mi">1053</span><span class="o">/</span><span class="mi">1053</span> <span class="p">[</span><span class="o">==============================</span><span class="p">]</span> <span class="o">-</span> <span class="mi">7</span><span class="n">s</span> <span class="o">-</span> <span class="n">loss</span><span class="p">:</span> <span class="mf">2.3120</span> <span class="o">-</span> <span class="n">acc</span><span class="p">:</span> <span class="mf">0.8160</span>
+<span class="n">Epoch</span> <span class="mi">2</span><span class="o">/</span><span class="mi">10</span>
+<span class="mi">1053</span><span class="o">/</span><span class="mi">1053</span> <span class="p">[</span><span class="o">==============================</span><span class="p">]</span> <span class="o">-</span> <span class="mi">6</span><span class="n">s</span> <span class="o">-</span> <span class="n">loss</span><span class="p">:</span> <span class="mf">1.6045</span> <span class="o">-</span> <span class="n">acc</span><span class="p">:</span> <span class="mf">0.8724</span>
+<span class="n">Epoch</span> <span class="mi">3</span><span class="o">/</span><span class="mi">10</span>
+<span class="mi">1053</span><span class="o">/</span><span class="mi">1053</span> <span class="p">[</span><span class="o">==============================</span><span class="p">]</span> <span class="o">-</span> <span class="mi">7</span><span class="n">s</span> <span class="o">-</span> <span class="n">loss</span><span class="p">:</span> <span class="mf">1.1555</span> <span class="o">-</span> <span class="n">acc</span><span class="p">:</span> <span class="mf">0.9078</span>
+<span class="n">Epoch</span> <span class="mi">4</span><span class="o">/</span><span class="mi">10</span>
+<span class="mi">1053</span><span class="o">/</span><span class="mi">1053</span> <span class="p">[</span><span class="o">==============================</span><span class="p">]</span> <span class="o">-</span> <span class="mi">7</span><span class="n">s</span> <span class="o">-</span> <span class="n">loss</span><span class="p">:</span> <span class="mf">0.9149</span> <span class="o">-</span> <span class="n">acc</span><span class="p">:</span> <span class="mf">0.9264</span>
+<span class="n">Epoch</span> <span class="mi">5</span><span class="o">/</span><span class="mi">10</span>
+<span class="mi">1053</span><span class="o">/</span><span class="mi">1053</span> <span class="p">[</span><span class="o">==============================</span><span class="p">]</span> <span class="o">-</span> <span class="mi">6</span><span class="n">s</span> <span class="o">-</span> <span class="n">loss</span><span class="p">:</span> <span class="mf">0.7455</span> <span class="o">-</span> <span class="n">acc</span><span class="p">:</span> <span class="mf">0.9420</span>
+<span class="n">Epoch</span> <span class="mi">6</span><span class="o">/</span><span class="mi">10</span>
+<span class="mi">1053</span><span class="o">/</span><span class="mi">1053</span> <span class="p">[</span><span class="o">==============================</span><span class="p">]</span> <span class="o">-</span> <span class="mi">6</span><span class="n">s</span> <span class="o">-</span> <span class="n">loss</span><span class="p">:</span> <span class="mf">0.6218</span> <span class="o">-</span> <span class="n">acc</span><span class="p">:</span> <span class="mf">0.9522</span>
+<span class="n">Epoch</span> <span class="mi">7</span><span class="o">/</span><span class="mi">10</span>
+<span class="mi">1053</span><span class="o">/</span><span class="mi">1053</span> <span class="p">[</span><span class="o">==============================</span><span class="p">]</span> <span class="o">-</span> <span class="mi">7</span><span class="n">s</span> <span class="o">-</span> <span class="n">loss</span><span class="p">:</span> <span class="mf">0.5393</span> <span class="o">-</span> <span class="n">acc</span><span class="p">:</span> <span class="mf">0.9623</span>
+<span class="n">Epoch</span> <span class="mi">8</span><span class="o">/</span><span class="mi">10</span>
+<span class="mi">1053</span><span class="o">/</span><span class="mi">1053</span> <span class="p">[</span><span class="o">==============================</span><span class="p">]</span> <span class="o">-</span> <span class="mi">7</span><span class="n">s</span> <span class="o">-</span> <span class="n">loss</span><span class="p">:</span> <span class="mf">0.5104</span> <span class="o">-</span> <span class="n">acc</span><span class="p">:</span> <span class="mf">0.9645</span>
+<span class="n">Epoch</span> <span class="mi">9</span><span class="o">/</span><span class="mi">10</span>
+<span class="mi">1053</span><span class="o">/</span><span class="mi">1053</span> <span class="p">[</span><span class="o">==============================</span><span class="p">]</span> <span class="o">-</span> <span class="mi">6</span><span class="n">s</span> <span class="o">-</span> <span class="n">loss</span><span class="p">:</span> <span class="mf">0.4923</span> <span class="o">-</span> <span class="n">acc</span><span class="p">:</span> <span class="mf">0.9644</span>
+<span class="n">Epoch</span> <span class="mi">10</span><span class="o">/</span><span class="mi">10</span>
+<span class="mi">1053</span><span class="o">/</span><span class="mi">1053</span> <span class="p">[</span><span class="o">==============================</span><span class="p">]</span> <span class="o">-</span> <span class="mi">6</span><span class="n">s</span> <span class="o">-</span> <span class="n">loss</span><span class="p">:</span> <span class="mf">0.4475</span> <span class="o">-</span> <span class="n">acc</span><span class="p">:</span> <span class="mf">0.9648</span>
+
+<span class="n">model_visual</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>对于前10个epochs我训练模型时开启了verbose模式是为了让你看看发生了什么。之后，就像你在下面看到的我关闭了verbose模式使代码更简洁。</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">Y_preds</span><span class="o">=</span><span class="n">model_visual</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+<span class="nb">sum</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">Y_preds</span><span class="p">))</span>
+<span class="mf">438.26369654744053</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id6">
+<h2>让我们看看我们的预测？<a class="headerlink" href="#id6" title="永久链接至标题">¶</a></h2>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">f6</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;Genredict.pckl&#39;</span><span class="p">,</span><span class="s1">&#39;rb&#39;</span><span class="p">)</span>
+<span class="n">Genre_ID_to_name</span><span class="o">=</span><span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f6</span><span class="p">)</span>
+<span class="n">f6</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="nb">sum</span><span class="p">(</span><span class="n">Y_preds</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>2.0173444656837738</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="nb">sum</span><span class="p">(</span><span class="n">Y_preds</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>2.0</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">genre_list</span><span class="o">=</span><span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">Genre_ID_to_name</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">precs</span><span class="o">=</span><span class="p">[]</span>
+<span class="n">recs</span><span class="o">=</span><span class="p">[]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">Y_preds</span><span class="p">)):</span>
+    <span class="n">row</span><span class="o">=</span><span class="n">Y_preds</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="n">gt_genres</span><span class="o">=</span><span class="n">Y_test</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="n">gt_genre_names</span><span class="o">=</span><span class="p">[]</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">gt_genres</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">gt_genre_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Genre_ID_to_name</span><span class="p">[</span><span class="n">genre_list</span><span class="p">[</span><span class="n">j</span><span class="p">]])</span>
+    <span class="n">top_3</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">row</span><span class="p">)[</span><span class="o">-</span><span class="mi">3</span><span class="p">:]</span>
+    <span class="n">predicted_genres</span><span class="o">=</span><span class="p">[]</span>
+    <span class="k">for</span> <span class="n">genre</span> <span class="ow">in</span> <span class="n">top_3</span><span class="p">:</span>
+        <span class="n">predicted_genres</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Genre_ID_to_name</span><span class="p">[</span><span class="n">genre_list</span><span class="p">[</span><span class="n">genre</span><span class="p">]])</span>
+    <span class="p">(</span><span class="n">precision</span><span class="p">,</span><span class="n">recall</span><span class="p">)</span><span class="o">=</span><span class="n">precision_recall</span><span class="p">(</span><span class="n">gt_genre_names</span><span class="p">,</span><span class="n">predicted_genres</span><span class="p">)</span>
+    <span class="n">precs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">precision</span><span class="p">)</span>
+    <span class="n">recs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">recall</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">i</span><span class="o">%</span><span class="mi">50</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s2">&quot;Predicted: &quot;</span><span class="p">,</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">predicted_genres</span><span class="p">),</span><span class="s2">&quot; Actual: &quot;</span><span class="p">,</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">gt_genre_names</span><span class="p">)</span>
+
+<span class="c1">##</span>
+<span class="n">Predicted</span><span class="p">:</span>  <span class="n">Adventure</span><span class="p">,</span><span class="n">Science</span> <span class="n">Fiction</span><span class="p">,</span><span class="n">Action</span>  <span class="n">Actual</span><span class="p">:</span>  <span class="n">Adventure</span><span class="p">,</span><span class="n">Action</span><span class="p">,</span><span class="n">Comedy</span><span class="p">,</span><span class="n">Romance</span>
+<span class="n">Predicted</span><span class="p">:</span>  <span class="n">Romance</span><span class="p">,</span><span class="n">Science</span> <span class="n">Fiction</span><span class="p">,</span><span class="n">Adventure</span>  <span class="n">Actual</span><span class="p">:</span>  <span class="n">Drama</span>
+<span class="n">Predicted</span><span class="p">:</span>  <span class="n">Adventure</span><span class="p">,</span><span class="n">Fantasy</span><span class="p">,</span><span class="n">Action</span>  <span class="n">Actual</span><span class="p">:</span>  <span class="n">Fantasy</span><span class="p">,</span><span class="n">Drama</span><span class="p">,</span><span class="n">Action</span><span class="p">,</span><span class="n">Western</span><span class="p">,</span><span class="n">Thriller</span>
+<span class="n">Predicted</span><span class="p">:</span>  <span class="n">Documentary</span><span class="p">,</span><span class="n">Science</span> <span class="n">Fiction</span><span class="p">,</span><span class="n">Action</span>  <span class="n">Actual</span><span class="p">:</span>  <span class="n">Drama</span><span class="p">,</span><span class="n">Action</span><span class="p">,</span><span class="n">Thriller</span><span class="p">,</span><span class="n">Science</span> <span class="n">Fiction</span>
+<span class="n">Predicted</span><span class="p">:</span>  <span class="n">Thriller</span><span class="p">,</span><span class="n">Action</span><span class="p">,</span><span class="n">Science</span> <span class="n">Fiction</span>  <span class="n">Actual</span><span class="p">:</span>  <span class="n">Horror</span><span class="p">,</span><span class="n">Action</span><span class="p">,</span><span class="n">Thriller</span><span class="p">,</span><span class="n">Mystery</span>
+<span class="n">Predicted</span><span class="p">:</span>  <span class="n">Comedy</span><span class="p">,</span><span class="n">Animation</span><span class="p">,</span><span class="n">Family</span>  <span class="n">Actual</span><span class="p">:</span>  <span class="n">Animation</span><span class="p">,</span><span class="n">Comedy</span><span class="p">,</span><span class="n">Family</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="nb">print</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">precs</span><span class="p">)),</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">recs</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>0.489898989899 0.500220959596</p>
+<p>因此，即使只有海报，即视觉特征，我们也可以做出很好的预测！当然，文本特征要好于视觉特征，但中要的是它仍然有效。在更加复杂的模型中，我们可以结合二者来做出更好的预测。这正是我的研究要做的事。</p>
+<p>这些模型是在CPU上训练的，并且使用一个简单的单层模型来显示这些模型可以提取的数据中由很多信息。如果有更大的数据集和更多的训练，我可以将这些数值提高70%，也就接近文本特征的数值了。我班上的一些团队甚至得到的结果更好。如果你想要得到更好的结果首先尝试更多的数据。然后你可以试着在GPU上训练，学习费率和其他多参数模型。最后你可以考虑使用 ResNet，一个比VGG更加强大的神经网络模型。一旦你掌握了机器学习的实践知识，这些你都可以尝试。</p>
 </div>
 </div>
 
