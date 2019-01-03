@@ -210,6 +210,212 @@
 <p>(1265,300)</p>
 <p>这样，我们就可以使用这个word2vec模型来表示概述中的单词。然后，我们可以用它作为x表示。因此，我们使用的是基于单词语义表示的表示，而不是字数。从数学上讲，每个单词从3-4维（长度）到300维！</p>
 <p>对于上面的同一组电影，让我们试着从它们的概述的深层表现来预测类型！</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="nb">len</span><span class="p">(</span><span class="n">final_movies_set</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>1265</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">nltk.tokenize</span> <span class="k">import</span> <span class="n">RegexpTokenizer</span>
+<span class="kn">from</span> <span class="nn">stop_words</span> <span class="k">import</span> <span class="n">get_stop_words</span>
+<span class="n">tokenizer</span> <span class="o">=</span> <span class="n">RegexpTokenizer</span><span class="p">(</span><span class="s1">r&#39;\w+&#39;</span><span class="p">)</span>
+
+<span class="c1"># create English stop words list</span>
+<span class="n">en_stop</span> <span class="o">=</span> <span class="n">get_stop_words</span><span class="p">(</span><span class="s1">&#39;en&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">movie_mean_wordvec</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">final_movies_set</span><span class="p">),</span><span class="mi">300</span><span class="p">))</span>
+<span class="n">movie_mean_wordvec</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+</div>
+<p>(1265,300)</p>
+<p>在我们对文本训练模型之前需要做一些预处理。我们要做的唯一的事就是——删除我们知道的没有特殊含义的常见单词。某种意义上来说，这对我们来说就是噪音。这些单词经常被删除并且被称为“stop words”。你可以在网上查到他们。其中包括“a”、“and”、“but”、“how”、“or”等简单单词。使用python包nltk可以很容易地删除它们。</p>
+<p>在上述数据集中，仅包含“stop words”的电影概述的电影和仅有word2vec表达式的概述的电影会被忽略。其余的被用于构建我们的Mean word2vec表达式。简单来说，对每部电影概述——</p>
+<blockquote>
+<div><ul class="simple">
+<li>获取电影概述</li>
+<li>删掉其中的stop words</li>
+<li>如果属于word2vec 那么取它的300维的word2vec标识</li>
+<li>如果不是 输出单词</li>
+<li>对每部电影来说，对所有概述中没有被输出的单词计算300维向量表达式的平均值</li>
+</ul>
+</div></blockquote>
+<p>这意味着它将成为电影的300维表示。对于所有电影，这些都存储在一个numpy数组中。因此X矩阵变成(1263,300)，而且Y变成(1263,20)，也就是说之前说过的二值化的20中类型。</p>
+<p>为什么取算术平均数？如果你觉得我们应该把所有的单词分开——那么你的想法是正确的，但遗憾的是，我们受到了当今神经网络工作方式的限制。我不会考虑这个问题，因为担心在其他不相关的细节上压力过大。但如果你感兴趣，请阅读这篇精彩的论文-<a class="reference external" href="https://jiajunwu.com/papers/dmil_cvpr.pdf">https://jiajunwu.com/papers/dmil_cvpr.pdf</a></p>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">genres</span><span class="o">=</span><span class="p">[]</span>
+<span class="n">rows_to_delete</span><span class="o">=</span><span class="p">[]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">final_movies_set</span><span class="p">)):</span>
+    <span class="n">mov</span><span class="o">=</span><span class="n">final_movies_set</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="n">movie_genres</span><span class="o">=</span><span class="n">mov</span><span class="p">[</span><span class="s1">&#39;genre_ids&#39;</span><span class="p">]</span>
+    <span class="n">genres</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">movie_genres</span><span class="p">)</span>
+    <span class="n">overview</span><span class="o">=</span><span class="n">mov</span><span class="p">[</span><span class="s1">&#39;overview&#39;</span><span class="p">]</span>
+    <span class="n">tokens</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">tokenize</span><span class="p">(</span><span class="n">overview</span><span class="p">)</span>
+    <span class="n">stopped_tokens</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">tokens</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">en_stop</span><span class="p">]</span>
+    <span class="n">count_in_vocab</span><span class="o">=</span><span class="mi">0</span>
+    <span class="n">s</span><span class="o">=</span><span class="mi">0</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">stopped_tokens</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="n">rows_to_delete</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="n">genres</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="c1">#         print overview</span>
+<span class="c1">#         print &quot;sample &quot;,i,&quot;had no nonstops&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">tok</span> <span class="ow">in</span> <span class="n">stopped_tokens</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">tok</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">model2</span><span class="o">.</span><span class="n">vocab</span><span class="p">:</span>
+                <span class="n">count_in_vocab</span><span class="o">+=</span><span class="mi">1</span>
+                <span class="n">s</span><span class="o">+=</span><span class="n">model2</span><span class="p">[</span><span class="n">tok</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span>
+        <span class="k">if</span> <span class="n">count_in_vocab</span><span class="o">!=</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">movie_mean_wordvec</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">s</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">count_in_vocab</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rows_to_delete</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">genres</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="c1">#             print overview</span>
+<span class="c1">#             print &quot;sample &quot;,i,&quot;had no word2vec&quot;</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="nb">len</span><span class="p">(</span><span class="n">genres</span><span class="p">)</span>
+
+<span class="mi">1261</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">mask2</span><span class="o">=</span><span class="p">[]</span>
+<span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">movie_mean_wordvec</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows_to_delete</span><span class="p">:</span>
+        <span class="n">mask2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mask2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">X</span><span class="o">=</span><span class="n">movie_mean_wordvec</span><span class="p">[</span><span class="n">mask2</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">X</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+</div>
+<p>(1261,300)</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">Y</span><span class="o">=</span><span class="n">mlb</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">genres</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">Y</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+</div>
+<p>(1261,20)</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">textual_features</span><span class="o">=</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">)</span>
+<span class="n">f9</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;textual_features.pckl&#39;</span><span class="p">,</span><span class="s1">&#39;wb&#39;</span><span class="p">)</span>
+<span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">textual_features</span><span class="p">,</span><span class="n">f9</span><span class="p">)</span>
+<span class="n">f9</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="c1"># textual_features=(X,Y)</span>
+<span class="n">f9</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;textual_features.pckl&#39;</span><span class="p">,</span><span class="s1">&#39;rb&#39;</span><span class="p">)</span>
+<span class="n">textual_features</span><span class="o">=</span><span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f9</span><span class="p">)</span>
+<span class="n">f9</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">)</span><span class="o">=</span><span class="n">textual_features</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">X</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+</div>
+<p>(1261,300)</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">Y</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+</div>
+<p>(1261,20)</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">mask_text</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">))</span><span class="o">&lt;</span><span class="mf">0.8</span>
+
+<span class="n">X_train</span><span class="o">=</span><span class="n">X</span><span class="p">[</span><span class="n">mask_text</span><span class="p">]</span>
+<span class="n">Y_train</span><span class="o">=</span><span class="n">Y</span><span class="p">[</span><span class="n">mask_text</span><span class="p">]</span>
+<span class="n">X_test</span><span class="o">=</span><span class="n">X</span><span class="p">[</span><span class="o">~</span><span class="n">mask_text</span><span class="p">]</span>
+<span class="n">Y_test</span><span class="o">=</span><span class="n">Y</span><span class="p">[</span><span class="o">~</span><span class="n">mask_text</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>我们再一次使用与之前相似的那种简单架构</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">keras.models</span> <span class="k">import</span> <span class="n">Sequential</span>
+<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="k">import</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">Activation</span>
+
+<span class="n">model_textual</span> <span class="o">=</span> <span class="n">Sequential</span><span class="p">([</span>
+    <span class="n">Dense</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">300</span><span class="p">,)),</span>
+    <span class="n">Activation</span><span class="p">(</span><span class="s1">&#39;relu&#39;</span><span class="p">),</span>
+    <span class="n">Dense</span><span class="p">(</span><span class="mi">20</span><span class="p">),</span>
+    <span class="n">Activation</span><span class="p">(</span><span class="s1">&#39;softmax&#39;</span><span class="p">),</span>
+<span class="p">])</span>
+
+<span class="n">model_textual</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">optimizer</span><span class="o">=</span><span class="s1">&#39;rmsprop&#39;</span><span class="p">,</span>
+            <span class="n">loss</span><span class="o">=</span><span class="s1">&#39;binary_crossentropy&#39;</span><span class="p">,</span>
+            <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;accuracy&#39;</span><span class="p">])</span>
+
+<span class="n">model_textual</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Epoch 1/10</p>
+<p>982/982 [==============================] - 0s - loss: 0.4819 - acc: 0.8520</p>
+<p>Epoch 2/10</p>
+<p>982/982 [==============================] - 0s - loss: 0.4642 - acc: 0.8520</p>
+<p>Epoch 3/10</p>
+<p>982/982 [==============================] - 0s - loss: 0.4527 - acc: 0.8520</p>
+<p>Epoch 4/10</p>
+<p>982/982 [==============================] - 0s - loss: 0.4456 - acc: 0.8520</p>
+<p>Epoch 5/10</p>
+<p>982/982 [==============================] - 0s - loss: 0.4407 - acc: 0.8520</p>
+<p>Epoch 6/10</p>
+<p>982/982 [==============================] - 0s - loss: 0.4367 - acc: 0.8520</p>
+<p>Epoch 7/10</p>
+<p>982/982 [==============================] - 0s - loss: 0.4332 - acc: 0.8520</p>
+<p>Epoch 8/10</p>
+<p>982/982 [==============================] - 0s - loss: 0.4295 - acc: 0.8520</p>
+<p>Epoch 9/10</p>
+<p>982/982 [==============================] - 0s - loss: 0.4260 - acc: 0.8520</p>
+<p>Epoch 10/10</p>
+<p>982/982 [==============================] - 0s - loss: 0.4227 - acc: 0.8520</p>
+<p>&lt;keras.callbacks.History at 0x4e27e3850&gt;</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">model_textual</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>&lt;keras.callbacks.History at 0x4e27e3a10&gt;</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">score</span> <span class="o">=</span> <span class="n">model_textual</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">Y_test</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">249</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>249/279 [=========================&gt;….] - ETA: 0s</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">: </span><span class="si">%.2f%%</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">model_textual</span><span class="o">.</span><span class="n">metrics_names</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">score</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="mi">100</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>acc: 86.52%</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">Y_preds</span><span class="o">=</span><span class="n">model_textual</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+<span class="n">genre_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">10769</span><span class="p">)</span>
+
+<span class="nb">print</span> <span class="s2">&quot;Our predictions for the movies are - </span><span class="se">\n</span><span class="s2">&quot;</span>
+<span class="n">precs</span><span class="o">=</span><span class="p">[]</span>
+<span class="n">recs</span><span class="o">=</span><span class="p">[]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">Y_preds</span><span class="p">)):</span>
+    <span class="n">row</span><span class="o">=</span><span class="n">Y_preds</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="n">gt_genres</span><span class="o">=</span><span class="n">Y_test</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="n">gt_genre_names</span><span class="o">=</span><span class="p">[]</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">gt_genres</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">gt_genre_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Genre_ID_to_name</span><span class="p">[</span><span class="n">genre_list</span><span class="p">[</span><span class="n">j</span><span class="p">]])</span>
+    <span class="n">top_3</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">row</span><span class="p">)[</span><span class="o">-</span><span class="mi">3</span><span class="p">:]</span>
+    <span class="n">predicted_genres</span><span class="o">=</span><span class="p">[]</span>
+    <span class="k">for</span> <span class="n">genre</span> <span class="ow">in</span> <span class="n">top_3</span><span class="p">:</span>
+        <span class="n">predicted_genres</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Genre_ID_to_name</span><span class="p">[</span><span class="n">genre_list</span><span class="p">[</span><span class="n">genre</span><span class="p">]])</span>
+    <span class="p">(</span><span class="n">precision</span><span class="p">,</span><span class="n">recall</span><span class="p">)</span><span class="o">=</span><span class="n">precision_recall</span><span class="p">(</span><span class="n">gt_genre_names</span><span class="p">,</span><span class="n">predicted_genres</span><span class="p">)</span>
+    <span class="n">precs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">precision</span><span class="p">)</span>
+    <span class="n">recs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">recall</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">i</span><span class="o">%</span><span class="mi">50</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s2">&quot;Predicted: &quot;</span><span class="p">,</span><span class="n">predicted_genres</span><span class="p">,</span><span class="s2">&quot; Actual: &quot;</span><span class="p">,</span><span class="n">gt_genre_names</span>
+</pre></div>
+</div>
+<p>Our predictions for the movies are -</p>
+<p>Predicted:  [u’Science Fiction’, u’Action’, u’Adventure’]  Actual:  [u’Adventure’, u’Action’, u’Comedy’, u’Romance’]</p>
+<p>Predicted:  [u’Thriller’, u’Crime’, u’Mystery’]  Actual:  [u’Drama’, u’Thriller’, u’Science Fiction’]</p>
+<p>Predicted:  [u’Action’, u’Crime’, u’Thriller’]  Actual:  [u’Adventure’, u’Action’, u’Comedy’, u’Thriller’, u’Crime’]</p>
+<p>Predicted:  [u’Family’, u’Horror’, u’Comedy’]  Actual:  [u’Horror’, u’Action’, u’Thriller’]</p>
+<p>Predicted:  [u’Crime’, u’Thriller’, u’Drama’]  Actual:  [u’Action’, u’Science Fiction’]</p>
+<p>Predicted:  [u’Drama’, u’Thriller’, u’Mystery’]  Actual:  [u’Drama’, u’Thriller’, u’Mystery’, u’Romance’]</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="nb">print</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">precs</span><span class="p">)),</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">recs</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>0.519713261649 0.563918757467</p>
+<p>即使对上面的模型没有太多调整，这些结果也能够超越我们之前的结果。</p>
+<p>注-当我对从维基百科中的爬取的情节进行分类时，我的准确率高达78%。大量的信息非常适合用深度模型对电影类型进行分类。强烈建议您尝试使用这种架构。</p>
 </div>
 
 
