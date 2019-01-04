@@ -2,4 +2,5 @@
 ========
 .. toctree::
     :maxdepth: 1
-    
+
+    acknowledge    
